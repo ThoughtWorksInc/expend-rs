@@ -1,15 +1,15 @@
 [package]
-name = "foobar"
+name = "expend"
 version = "1.0.0"
 authors = ["Sebastian Thiel <byronimo@gmail.com>"]
 publish = false
 
 [dependencies]
-failure = "0.1.1"
+failure = "0.1.2"
 failure-tools = "4.0.2"
 
 [[bin]]
-name="foobar"
+name="expend"
 path="src/main.rs"
 
 [profile.release]

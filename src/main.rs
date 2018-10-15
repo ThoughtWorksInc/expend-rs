@@ -1,7 +1,7 @@
 #[macro_use]
 extern crate failure;
 extern crate failure_tools;
-extern crate foobar;
+extern crate expend;
 
 use std::{env, fs::File};
 use failure_tools::ok_or_exit;
@@ -17,7 +17,7 @@ fn run() -> Result<(), Error> {
     let input_stream = File::open(&filename)
         .with_context(|_| format_err!("Could not open '{}' for reading", filename))?;
 
-    foobar::fun()
+    expend::fun()
 }
 
 fn main() {
