@@ -3,6 +3,7 @@ extern crate failure;
 extern crate failure_tools;
 extern crate foobar;
 
+use std::{env, fs::File};
 use failure_tools::ok_or_exit;
 use failure::{Error, ResultExt};
 

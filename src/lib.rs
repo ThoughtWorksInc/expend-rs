@@ -1,6 +1,7 @@
-#[macro_use]
 extern crate failure;
 
-pub fn fun() {
+use failure::Error;
+
+pub fn fun() -> Result<(), Error> {
     unimplemented!();
 }
