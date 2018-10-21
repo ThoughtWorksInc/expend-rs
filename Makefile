@@ -8,6 +8,7 @@ help:
 	$(info profile                      | only on linux - run callgrind and annotate it)
 	$(info journey-tests                | run all stateless journey test)
 	$(info continuous-journey-tests     | run all stateless journey test whenever something changes)
+	$(info cdc                          | generate the pact to expensify - is used in journey-tests)
 	$(info -- Use docker for all dependencies - run make interactively from there ----------------)
 	$(info interactive-developer-environment-in-docker | gives you everything you need to run all targets)
 
@@ -38,4 +39,7 @@ journey-tests: target/debug/expend
 
 continuous-journey-tests:
 	watchexec $(MAKE) journey-tests
+
+cdc:
+	cargo test --test=client_pact
 
