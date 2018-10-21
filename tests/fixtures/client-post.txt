@@ -1,10 +1,10 @@
 requestJobDescription={
-  "type": "some-type",
   "credentials": {
     "partnerUserId": "username",
     "partnerUserSecret": "password"
   },
   "inputSettings": {
     "hello": 42
-  }
+  },
+  "type": "some-type"
 }

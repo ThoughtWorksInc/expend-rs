@@ -12,22 +12,6 @@ pub struct Client {
     password: String,
 }
 
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-struct Credentials {
-    partner_user_id: String,
-    partner_user_secret: String,
-}
-
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-struct ExpensifyRequest {
-    #[serde(rename = "type")]
-    type_: String,
-    credentials: Credentials,
-    input_settings: json::Value,
-}
-
 impl Client {
     pub fn new(
         host: Option<Url>,
@@ -52,16 +36,19 @@ impl Client {
         let url = self.host
             .join(ENDPOINT)
             .expect("parsing of static endpoint");
-        let request_payload = ExpensifyRequest {
-            type_: request_type.to_owned(),
-            credentials: Credentials {
-                partner_user_id: self.username.clone(),
-                partner_user_secret: self.password.clone(),
+
+        let request_payload = json!({
+            "type": request_type.to_owned(),
+            "credentials": {
+                "partnerUserId": self.username.clone(),
+                "partnerUserSecret": self.password.clone(),
             },
-            input_settings: json::to_value(input)?,
-        };
+            "inputSettings": json::to_value(input)?,
+        });
+
         let json_str = json::to_string_pretty(&request_payload)?;
         let body_text = format!(r#"requestJobDescription={}"#, json_str);
+
         let mut response = reqwest::Client::new()
             .post(url)
             .header("Content-Type", "text/plain")
@@ -69,6 +56,7 @@ impl Client {
             .send()
             .context("Post request failed")?;
         let value = response.json().context("failed to parse body as json")?;
+
         if response.status().is_success() {
             Ok(value)
         } else {

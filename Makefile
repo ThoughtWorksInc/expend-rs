@@ -25,7 +25,7 @@ target/release/expend: always
 	cargo build --release
 
 lint:
-	cargo clippy
+	cargo clippy --tests
 
 profile: target/release/expend
 	valgrind --callgrind-out-file=callgrind.profile --tool=callgrind  $< >/dev/null

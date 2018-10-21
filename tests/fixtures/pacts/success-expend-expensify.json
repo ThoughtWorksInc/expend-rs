@@ -11,7 +11,7 @@
         }
       ],
       "request": {
-        "body": "requestJobDescription={\n  \"type\": \"some-type\",\n  \"credentials\": {\n    \"partnerUserId\": \"username\",\n    \"partnerUserSecret\": \"password\"\n  },\n  \"inputSettings\": {\n    \"hello\": 42\n  }\n}",
+        "body": "requestJobDescription={\n  \"credentials\": {\n    \"partnerUserId\": \"username\",\n    \"partnerUserSecret\": \"password\"\n  },\n  \"inputSettings\": {\n    \"hello\": 42\n  },\n  \"type\": \"some-type\"\n}",
         "method": "POST",
         "path": "/Integration-Server/ExpensifyIntegrations"
       },
