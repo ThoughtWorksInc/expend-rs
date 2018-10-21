@@ -21,3 +21,4 @@ overflow-checks = true
 
 [dev-dependencies]
 pact_consumer = "0.4.0"
+pact_matching = "0.4.5"

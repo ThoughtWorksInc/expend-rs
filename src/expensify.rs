@@ -30,7 +30,6 @@ impl Client {
         let url = self.host
             .join(ENDPOINT)
             .expect("parsing of static endpoint");
-        eprintln!("{}", url);
         Ok(reqwest::Client::new()
             .post(url)
             .json(input)

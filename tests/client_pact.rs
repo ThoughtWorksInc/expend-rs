@@ -1,9 +1,11 @@
 extern crate expend;
 extern crate pact_consumer;
+extern crate pact_matching;
 extern crate serde_json;
 
 use std::str::FromStr;
 use pact_consumer::prelude::*;
+use pact_matching::models::PactSpecification;
 use expend::expensify;
 
 const OK_RESPONSE: &str = include_str!("./fixtures/ok-response.json");
@@ -31,4 +33,13 @@ fn expensify_pact() {
             .unwrap(),
         serde_json::Value::from_str(OK_RESPONSE).unwrap()
     );
+    pact.write_pact(
+        &std::path::Path::new(file!())
+            .parent()
+            .unwrap()
+            .join("fixtures")
+            .join("pacts")
+            .join(pact.default_file_name()),
+        PactSpecification::V3,
+    ).unwrap();
 }

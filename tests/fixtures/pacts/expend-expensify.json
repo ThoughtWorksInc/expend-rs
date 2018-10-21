@@ -1,0 +1,60 @@
+{
+  "consumer": {
+    "name": "expend"
+  },
+  "interactions": [
+    {
+      "description": "post any input settings",
+      "providerStates": [
+        {
+          "name": "valid credentials and valid input"
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "path": "/Integration-Server/ExpensifyIntegrations"
+      },
+      "response": {
+        "body": {
+          "valid-json": true
+        },
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "status": 200
+      }
+    },
+    {
+      "description": "post any input settings",
+      "providerStates": [
+        {
+          "name": "valid credentials and valid input"
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "path": "/Integration-Server/ExpensifyIntegrations"
+      },
+      "response": {
+        "body": {
+          "valid-json": true
+        },
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "status": 200
+      }
+    }
+  ],
+  "metadata": {
+    "pactRust": {
+      "version": "0.4.5"
+    },
+    "pactSpecification": {
+      "version": "3.0.0"
+    }
+  },
+  "provider": {
+    "name": "expensify"
+  }
+}
