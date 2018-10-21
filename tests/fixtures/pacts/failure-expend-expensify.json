@@ -4,23 +4,24 @@
   },
   "interactions": [
     {
-      "description": "post any input settings",
+      "description": "post something",
       "providerStates": [
         {
-          "name": "valid credentials and valid input"
+          "name": "invalid credentials and valid input"
         }
       ],
       "request": {
-        "body": "requestJobDescription={\n  \"type\": \"some-type\",\n  \"credentials\": {\n    \"partnerUserId\": \"username\",\n    \"partnerUserSecret\": \"password\"\n  },\n  \"inputSettings\": {\n    \"hello\": 42\n  }\n}",
         "method": "POST",
         "path": "/Integration-Server/ExpensifyIntegrations"
       },
       "response": {
-        "body": "{\"valid-json\": true}\n",
-        "headers": {
-          "Content-Type": "text/plain"
+        "body": {
+          "valid-json": true
         },
-        "status": 200
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "status": 401
       }
     }
   ],

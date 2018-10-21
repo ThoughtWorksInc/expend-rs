@@ -1,3 +1,4 @@
+#[macro_use]
 extern crate failure;
 extern crate reqwest;
 extern crate serde;

@@ -3,7 +3,7 @@ use serde_json as json;
 use std::str::FromStr;
 use failure::{self, ResultExt};
 
-const ENDPOINT: &str = "/Integration-Server/ExpensifyIntegrations";
+pub const ENDPOINT: &str = "/Integration-Server/ExpensifyIntegrations";
 
 pub struct Client {
     host: Url,
@@ -60,13 +60,21 @@ impl Client {
         };
         let json_str = json::to_string_pretty(&request_payload)?;
         let body_text = format!(r#"requestJobDescription={}"#, json_str);
-        Ok(reqwest::Client::new()
+        let mut response = reqwest::Client::new()
             .post(url)
             .header("Content-Type", "text/plain")
             .body(body_text)
             .send()
-            .context("Post request failed")?
-            .json()
-            .context("failed to parse body as json")?)
+            .context("Post request failed")?;
+        let value = response.json().context("failed to parse body as json")?;
+        if response.status().is_success() {
+            Ok(value)
+        } else {
+            Err(format_err!(
+                "Request failed with http status {}: {}",
+                response.status().as_u16(),
+                value
+            ))
+        }
     }
 }

@@ -14,21 +14,50 @@ const EXPECTED_REQUEST_BODY: &str = include_str!("./fixtures/client-post.txt");
 
 fn new_pact(make_interactions: impl FnOnce(&mut InteractionBuilder)) -> Pact {
     PactBuilder::new("expend", "expensify")
-        .interaction("post any input settings", make_interactions)
+        .interaction("post something", make_interactions)
         .build()
 }
 
 #[test]
-fn expensify_pact() {
+fn expensify_post_failure() {
+    let pact = new_pact(|i| {
+        i.given("invalid credentials and valid input");
+        i.request.post().path(expensify::ENDPOINT);
+        i.response
+            .status(401)
+            .content_type("application/json")
+            .body(OK_RESPONSE);
+    });
+    let expensify_mock = pact.start_mock_server();
+
+    let client = expensify::Client::new(
+        Some(expensify_mock.url().clone()),
+        "username",
+        "invalid-password",
+    );
+    assert!(
+        client
+            .post(
+                "some-type",
+                serde_json::from_str(r#"{"hello": 42}"#).unwrap()
+            )
+            .is_err()
+    );
+
+    write_pact_file(&pact, "failure");
+}
+
+#[test]
+fn expensify_post_success() {
     let pact = new_pact(|i| {
         i.given("valid credentials and valid input");
         i.request
             .post()
             .body(EXPECTED_REQUEST_BODY)
-            .path("/Integration-Server/ExpensifyIntegrations");
+            .path(expensify::ENDPOINT);
         i.response
             .status(200)
-            .content_type("text/plain")
+            .content_type("application/json")
             .body(OK_RESPONSE);
     });
     let expensify_mock = pact.start_mock_server();
@@ -44,16 +73,16 @@ fn expensify_pact() {
         serde_json::Value::from_str(OK_RESPONSE).unwrap()
     );
 
-    write_pact_file(&pact);
+    write_pact_file(&pact, "success");
 }
 
-fn write_pact_file(pact: &Pact) {
+fn write_pact_file(pact: &Pact, prefix: &str) {
     let pact_file = &std::path::Path::new(file!())
         .parent()
         .unwrap()
         .join("fixtures")
         .join("pacts")
-        .join(pact.default_file_name());
+        .join(format!("{}-{}", prefix, pact.default_file_name()));
     std::fs::remove_file(pact_file).ok();
     pact.write_pact(pact_file, PactSpecification::V3).unwrap();
 }
