@@ -9,6 +9,8 @@ failure = "0.1.2"
 failure-tools = "4.0.2"
 reqwest = "0.9.3"
 serde_json = "1.0.32"
+serde = "1.0.80"
+serde_derive = "1.0.80"
 
 [[bin]]
 name="expend"

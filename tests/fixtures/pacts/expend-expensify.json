@@ -11,36 +11,14 @@
         }
       ],
       "request": {
+        "body": "requestJobDescription={\n  \"type\": \"some-type\",\n  \"credentials\": {\n    \"partnerUserId\": \"username\",\n    \"partnerUserSecret\": \"password\"\n  },\n  \"inputSettings\": {\n    \"hello\": 42\n  }\n}",
         "method": "POST",
         "path": "/Integration-Server/ExpensifyIntegrations"
       },
       "response": {
-        "body": {
-          "valid-json": true
-        },
+        "body": "{\"valid-json\": true}\n",
         "headers": {
-          "Content-Type": "application/json"
-        },
-        "status": 200
-      }
-    },
-    {
-      "description": "post any input settings",
-      "providerStates": [
-        {
-          "name": "valid credentials and valid input"
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "path": "/Integration-Server/ExpensifyIntegrations"
-      },
-      "response": {
-        "body": {
-          "valid-json": true
-        },
-        "headers": {
-          "Content-Type": "application/json"
+          "Content-Type": "text/plain"
         },
         "status": 200
       }
