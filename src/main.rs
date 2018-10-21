@@ -1,7 +1,7 @@
 #[macro_use]
 extern crate failure;
-extern crate failure_tools;
 extern crate expend;
+extern crate failure_tools;
 
 use std::{env, fs::File};
 use failure_tools::ok_or_exit;
