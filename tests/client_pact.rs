@@ -18,6 +18,17 @@ fn new_pact(make_interactions: impl FnOnce(&mut InteractionBuilder)) -> Pact {
         .build()
 }
 
+fn write_pact_file(pact: &Pact, prefix: &str) {
+    let pact_file = &std::path::Path::new(file!())
+        .parent()
+        .unwrap()
+        .join("fixtures")
+        .join("pacts")
+        .join(format!("{}-{}", prefix, pact.default_file_name()));
+    std::fs::remove_file(pact_file).ok();
+    pact.write_pact(pact_file, PactSpecification::V3).unwrap();
+}
+
 #[test]
 fn expensify_post_failure() {
     let pact = new_pact(|i| {
@@ -39,7 +50,7 @@ fn expensify_post_failure() {
         client
             .post(
                 "some-type",
-                serde_json::from_str(r#"{"hello": 42}"#).unwrap()
+                serde_json::Value::from_str(r#"{"hello": 42}"#).unwrap()
             )
             .is_err()
     );
@@ -67,22 +78,11 @@ fn expensify_post_success() {
         client
             .post(
                 "some-type",
-                serde_json::from_str(r#"{"hello": 42}"#).unwrap()
+                serde_json::Value::from_str(r#"{"hello": 42}"#).unwrap()
             )
             .unwrap(),
         serde_json::Value::from_str(OK_RESPONSE).unwrap()
     );
 
     write_pact_file(&pact, "success");
-}
-
-fn write_pact_file(pact: &Pact, prefix: &str) {
-    let pact_file = &std::path::Path::new(file!())
-        .parent()
-        .unwrap()
-        .join("fixtures")
-        .join("pacts")
-        .join(format!("{}-{}", prefix, pact.default_file_name()));
-    std::fs::remove_file(pact_file).ok();
-    pact.write_pact(pact_file, PactSpecification::V3).unwrap();
 }

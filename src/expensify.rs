@@ -1,5 +1,6 @@
 use reqwest::{self, Url};
 use serde_json as json;
+use serde::Serialize;
 use std::str::FromStr;
 use failure::{self, ResultExt};
 
@@ -42,10 +43,11 @@ impl Client {
             password: password.into(),
         }
     }
+
     pub fn post(
         &self,
         request_type: &str,
-        input: json::Value,
+        input: impl Serialize,
     ) -> Result<json::Value, failure::Error> {
         let url = self.host
             .join(ENDPOINT)
@@ -56,7 +58,7 @@ impl Client {
                 partner_user_id: self.username.clone(),
                 partner_user_secret: self.password.clone(),
             },
-            input_settings: input,
+            input_settings: json::to_value(input)?,
         };
         let json_str = json::to_string_pretty(&request_payload)?;
         let body_text = format!(r#"requestJobDescription={}"#, json_str);
