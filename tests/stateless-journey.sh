@@ -11,15 +11,31 @@ snapshot="$root/snapshots"
 SUCCESSFULLY=0
 WITH_FAILURE=1
 
-(with "no input file"
-  it "fails with an error message" && {
-    WITH_SNAPSHOT="$snapshot/failure-missing-input-file" \
-    expect_run ${WITH_FAILURE} "$exe"
-  }
+(with "a valid sub-command"
+  SCMD=(from-file file.yml)
+  (with "only a username set"
+    it "fails with an error message as the password is required additionally" && {
+      WITH_SNAPSHOT="$snapshot/failure-only-username-set" \
+      expect_run ${WITH_FAILURE} "$exe" --user-id=user "${SCMD[@]}"
+    }
+  )
+  (with "only a password set"
+    it "fails with an error message as the username is required additionally" && {
+      WITH_SNAPSHOT="$snapshot/failure-only-password-set" \
+      expect_run ${WITH_FAILURE} "$exe" --user-secret=secret "${SCMD[@]}"
+    }
+  )
 )
-(with "a valid input file"
-  it "produces the expected output" && {
-    WITH_SNAPSHOT="$snapshot/success-input-file-produces-correct-output" \
-    expect_run ${SUCCESSFULLY} "$exe" <(echo this is probably not what you want)
-  }
+(with "password and username provided with arguments"
+  CREDS=(--user-id user --user-secret secret)
+  (with "dry-run mode"
+    DRY=-n
+    (when "creating a post from a yml file"
+      it "produces the expected output and does nothing" && {
+        WITH_SNAPSHOT="$snapshot/success-create-from-yml-file" \
+        expect_run ${SUCCESSFULLY} "$exe" $DRY "${CREDS[@]}" from-file <(echo 'somevalue: 42')
+      }
+    )
+  )
+  # TODO: -yes mode (which is prompted otherwise) with actual mock server being up
 )
