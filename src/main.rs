@@ -4,11 +4,13 @@ extern crate failure_tools;
 extern crate serde_json;
 extern crate serde_yaml;
 extern crate structopt;
+extern crate termion;
 
 use structopt::StructOpt;
 use failure_tools::ok_or_exit;
 use failure::{bail, Error, ResultExt};
 use std::path::PathBuf;
+use std::io::stdin;
 
 #[derive(StructOpt)]
 #[structopt(raw(setting = "structopt::clap::AppSettings::ColoredHelp"))]
@@ -82,7 +84,18 @@ fn confirm_payload(mode: Mode, type_name: &str, value: &serde_json::Value) -> Re
         DryRun => {
             bail!("Aborted before post due to dry-run mode.");
         }
-        Confirm => unimplemented!("confirm"),
+        Confirm => {
+            if !termion::is_tty(&stdin()) {
+                bail!("Cannot prompt if stdin is not a tty. Use -y to auto-confirm the operation.");
+            }
+
+            eprintln!("Please type 'y' to post or anything else to cancel.");
+            let mut buf = String::new();
+            stdin().read_line(&mut buf)?;
+            if buf.trim().to_ascii_lowercase() != "y" {
+                bail!("Aborted by user");
+            }
+        }
         AutoConfirm => (),
     })
 }
