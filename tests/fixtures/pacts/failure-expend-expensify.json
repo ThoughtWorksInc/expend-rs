@@ -16,12 +16,12 @@
       },
       "response": {
         "body": {
-          "valid-json": true
+          "responseCode": 304
         },
         "headers": {
           "Content-Type": "application/json"
         },
-        "status": 401
+        "status": 200
       }
     }
   ],

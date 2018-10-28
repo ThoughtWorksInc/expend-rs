@@ -46,7 +46,7 @@ struct FromFile {
     /// The kind of payload, corresponds to the expensify 'type of job' to execute
     payload_type: String,
     #[structopt(parse(from_os_str))]
-    /// A path to the json file to load
+    /// A path to the json or yaml file to load
     input: PathBuf,
 }
 

@@ -12,6 +12,11 @@ pub struct Client {
     password: String,
 }
 
+fn into_err(code: u16, value: json::Value) -> failure::Error {
+    let value_str = json::to_string_pretty(&value).expect("valid json");
+    format_err!("Request failed with http status {}: {}", code, value_str)
+}
+
 impl Client {
     pub fn new(
         host: Option<Url>,
@@ -51,20 +56,19 @@ impl Client {
 
         let mut response = reqwest::Client::new()
             .post(url)
-            .header("Content-Type", "text/plain")
+            .header("Content-Type", "application/x-www-form-urlencoded")
             .body(body_text)
             .send()
             .context("Post request failed")?;
-        let value = response.json().context("failed to parse body as json")?;
+        let value: json::Value = response.json().context("failed to parse body as json")?;
 
         if response.status().is_success() {
-            Ok(value)
+            match value.get("responseCode").and_then(|v| v.as_u64()) {
+                Some(code) if code < 200 || code >= 300 => Err(into_err(code as u16, value)),
+                _ => Ok(value),
+            }
         } else {
-            Err(format_err!(
-                "Request failed with http status {}: {}",
-                response.status().as_u16(),
-                value
-            ))
+            Err(into_err(response.status().as_u16(), value))
         }
     }
 }

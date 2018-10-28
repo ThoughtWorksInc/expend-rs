@@ -9,6 +9,7 @@ use pact_consumer::builders::InteractionBuilder;
 use pact_matching::models::{Pact, PactSpecification};
 use expend::expensify;
 
+const ERR_RESPONSE: &str = include_str!("./fixtures/err-response.json");
 const OK_RESPONSE: &str = include_str!("./fixtures/ok-response.json");
 const EXPECTED_REQUEST_BODY: &str = include_str!("./fixtures/client-post.txt");
 
@@ -35,9 +36,9 @@ fn expensify_post_failure() {
         i.given("invalid credentials and valid input");
         i.request.post().path(expensify::ENDPOINT);
         i.response
-            .status(401)
+            .status(200)
             .content_type("application/json")
-            .body(OK_RESPONSE);
+            .body(ERR_RESPONSE);
     });
     let expensify_mock = pact.start_mock_server();
 
@@ -64,6 +65,7 @@ fn expensify_post_success() {
         i.given("valid credentials and valid input");
         i.request
             .post()
+            .header("Content-Type", "application/x-www-form-urlencoded")
             .body(EXPECTED_REQUEST_BODY)
             .path(expensify::ENDPOINT);
         i.response
