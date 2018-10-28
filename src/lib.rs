@@ -9,6 +9,22 @@ use failure::Error;
 
 pub mod expensify;
 
-pub fn fun() -> Result<(), Error> {
-    unimplemented!();
+pub enum Command {
+    Payload(String, serde_json::Value),
+}
+
+pub fn execute(
+    user_id: String,
+    password: String,
+    cmd: Command,
+    pre_execute: impl FnOnce(&str, &serde_json::Value) -> Result<(), Error>,
+) -> Result<serde_json::Value, Error> {
+    use self::Command::*;
+
+    let client = expensify::Client::new(None, user_id, password);
+    let (payload_type, payload) = match cmd {
+        Payload(pt, p) => (pt, p),
+    };
+    pre_execute(&payload_type, &payload)?;
+    client.post(&payload_type, payload)
 }
