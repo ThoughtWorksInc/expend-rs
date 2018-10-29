@@ -71,6 +71,10 @@ struct Args {
     /// entered credentials to the keychain.
     no_keychain: bool,
 
+    #[structopt(long = "clear-keychain-entry")]
+    /// If set, the previously stored credentials will be cleared. This is useful if your credentials change.
+    clear_keychain_entry: bool,
+
     #[structopt(subcommand)] // Note that we mark a field as a subcommand
     cmd: Command,
 }
@@ -102,15 +106,21 @@ fn exit_with(msg: &str) -> ! {
     std::process::exit(1)
 }
 
-fn credentials_from_keychain() -> Result<Option<(String, String)>, Error> {
-    eprintln!("Trying to use previously saved credentials from keychain.");
+fn get_or_clear_credentials_from_keychain(clear: bool) -> Result<Option<(String, String)>, Error> {
     let username = username::get_user_name()?;
     let keyring = Keyring::new("expend-rs cli", &username);
-    let credentials: Credentials = match keyring.get_password() {
-        Ok(pw) => pw.parse()?,
-        Err(_) => return Ok(None),
-    };
-    Ok(Some(credentials.into()))
+    if clear {
+        eprintln!("Clearing previously stored credentials");
+        keyring.delete_password().ok();
+        Ok(None)
+    } else {
+        eprintln!("Trying to use previously saved credentials from keychain.");
+        let credentials: Credentials = match keyring.get_password() {
+            Ok(pw) => pw.parse()?,
+            Err(_) => return Ok(None),
+        };
+        Ok(Some(credentials.into()))
+    }
 }
 
 fn store_credentials_in_keychain(creds: (String, String)) -> Result<(String, String), Error> {
@@ -179,7 +189,7 @@ fn run() -> Result<(), Error> {
         (None, None) => match if opt.no_keychain {
             None
         } else {
-            credentials_from_keychain()?
+            get_or_clear_credentials_from_keychain(opt.clear_keychain_entry)?
         } {
             Some(creds) => creds,
             None => query_credentials_from_user().and_then(|creds| {
