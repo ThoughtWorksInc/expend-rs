@@ -1,17 +1,50 @@
 extern crate expend;
 extern crate failure;
 extern crate failure_tools;
+extern crate keyring;
+#[macro_use]
+extern crate serde_derive;
 extern crate serde_json;
 extern crate serde_yaml;
 extern crate structopt;
 extern crate termion;
+extern crate username;
 
 use structopt::StructOpt;
 use failure_tools::ok_or_exit;
 use failure::{bail, format_err, Error, ResultExt};
-use std::path::PathBuf;
-use std::io::{stderr, stdin};
+use std::{convert::From, io::{stderr, stdin}, path::PathBuf, str::FromStr};
 use termion::input::TermRead;
+use keyring::Keyring;
+
+#[derive(Serialize, Deserialize)]
+struct Credentials {
+    user_id: String,
+    user_secret: String,
+}
+
+impl From<(String, String)> for Credentials {
+    fn from(f: (String, String)) -> Self {
+        Credentials {
+            user_id: f.0,
+            user_secret: f.1,
+        }
+    }
+}
+
+impl From<Credentials> for (String, String) {
+    fn from(c: Credentials) -> Self {
+        (c.user_id, c.user_secret)
+    }
+}
+
+impl FromStr for Credentials {
+    type Err = Error;
+
+    fn from_str(s: &str) -> Result<Self, <Self as FromStr>::Err> {
+        Ok(serde_json::from_str(s)?)
+    }
+}
 
 #[derive(StructOpt)]
 #[structopt(raw(setting = "structopt::clap::AppSettings::ColoredHelp"))]
@@ -32,6 +65,11 @@ struct Args {
     /// If set, no action will be performed, but it will print what would be performed
     /// Mutually exclusive with '-y'
     dry_run: bool,
+
+    #[structopt(long = "no-keychain")]
+    /// If set, we will not use the keychain to retrieve previously entered credentials, nor will we write
+    /// entered credentials to the keychain.
+    no_keychain: bool,
 
     #[structopt(subcommand)] // Note that we mark a field as a subcommand
     cmd: Command,
@@ -65,7 +103,23 @@ fn exit_with(msg: &str) -> ! {
 }
 
 fn credentials_from_keychain() -> Result<Option<(String, String)>, Error> {
-    Ok(None)
+    eprintln!("Trying to use previously saved credentials from keychain.");
+    let username = username::get_user_name()?;
+    let keyring = Keyring::new("expend-rs cli", &username);
+    let credentials: Credentials = match keyring.get_password() {
+        Ok(pw) => pw.parse()?,
+        Err(_) => return Ok(None),
+    };
+    Ok(Some(credentials.into()))
+}
+
+fn store_credentials_in_keychain(creds: (String, String)) -> Result<(String, String), Error> {
+    let username = username::get_user_name()?;
+    let keyring = Keyring::new("expend-rs cli", &username);
+    let creds: Credentials = creds.into();
+    let creds_str = serde_json::to_string(&creds)?;
+    keyring.set_password(&creds_str)?;
+    Ok(creds.into())
 }
 
 fn query_credentials_from_user() -> Result<(String, String), Error> {
@@ -122,9 +176,20 @@ fn run() -> Result<(), Error> {
         (Some(ref user), Some(ref secret)) => (user.to_owned(), secret.to_owned()),
         (Some(_), None) => exit_with("Please provide the secret as well with --user-secret."),
         (None, Some(_)) => exit_with("Please provide the user as well with --user-id."),
-        (None, None) => match credentials_from_keychain()? {
+        (None, None) => match if opt.no_keychain {
+            None
+        } else {
+            credentials_from_keychain()?
+        } {
             Some(creds) => creds,
-            None => query_credentials_from_user()?,
+            None => query_credentials_from_user().and_then(|creds| {
+                if opt.no_keychain {
+                    Ok(creds)
+                } else {
+                    eprintln!("Storing credentials in keychain - use --no-keychain to disable.");
+                    store_credentials_in_keychain(creds)
+                }
+            })?,
         },
     };
 
