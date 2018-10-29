@@ -8,9 +8,10 @@ extern crate termion;
 
 use structopt::StructOpt;
 use failure_tools::ok_or_exit;
-use failure::{bail, Error, ResultExt};
+use failure::{bail, format_err, Error, ResultExt};
 use std::path::PathBuf;
-use std::io::stdin;
+use std::io::{stderr, stdin};
+use termion::input::TermRead;
 
 #[derive(StructOpt)]
 #[structopt(raw(setting = "structopt::clap::AppSettings::ColoredHelp"))]
@@ -63,12 +64,21 @@ fn exit_with(msg: &str) -> ! {
     std::process::exit(1)
 }
 
-fn credentials_from_keychain() -> Result<(String, String), Error> {
-    unimplemented!("credentials from keychain");
+fn credentials_from_keychain() -> Result<Option<(String, String)>, Error> {
+    Ok(None)
 }
 
-fn query_credentials_from_user(_keychain_error: Error) -> Result<(String, String), Error> {
-    unimplemented!("query user credentials");
+fn query_credentials_from_user() -> Result<(String, String), Error> {
+    eprint!("Please enter your user user-id: ");
+    let mut user_id = String::new();
+    stdin().read_line(&mut user_id)?;
+
+    eprint!("Please enter your user user secret (it won't display): ");
+    let user_secret = stdin()
+        .read_passwd(&mut stderr())?
+        .ok_or_else(|| format_err!("Cannot proceed without a password."))?;
+    eprintln!();
+    Ok((user_id, user_secret))
 }
 
 fn confirm_payload(mode: Mode, type_name: &str, value: &serde_json::Value) -> Result<(), Error> {
@@ -89,7 +99,7 @@ fn confirm_payload(mode: Mode, type_name: &str, value: &serde_json::Value) -> Re
                 bail!("Cannot prompt if stdin is not a tty. Use -y to auto-confirm the operation.");
             }
 
-            eprintln!("Please type 'y' to post or anything else to cancel.");
+            eprint!("Please type 'y' to post or anything else to cancel: ");
             let mut buf = String::new();
             stdin().read_line(&mut buf)?;
             if buf.trim().to_ascii_lowercase() != "y" {
@@ -112,7 +122,10 @@ fn run() -> Result<(), Error> {
         (Some(ref user), Some(ref secret)) => (user.to_owned(), secret.to_owned()),
         (Some(_), None) => exit_with("Please provide the secret as well with --user-secret."),
         (None, Some(_)) => exit_with("Please provide the user as well with --user-id."),
-        (None, None) => credentials_from_keychain().or_else(query_credentials_from_user)?,
+        (None, None) => match credentials_from_keychain()? {
+            Some(creds) => creds,
+            None => query_credentials_from_user()?,
+        },
     };
 
     let mode = match (opt.dry_run, opt.yes) {
