@@ -45,19 +45,18 @@ impl Client {
         let request_payload = json!({
             "type": request_type.to_owned(),
             "credentials": {
-                "partnerUserId": self.username.clone(),
+                "partnerUserID": self.username.clone(),
                 "partnerUserSecret": self.password.clone(),
             },
             "inputSettings": json::to_value(input)?,
         });
 
-        let json_str = json::to_string_pretty(&request_payload)?;
-        let body_text = format!(r#"requestJobDescription={}"#, json_str);
+        let json_str = json::to_string(&request_payload)?;
+        let params = [("requestJobDescription", &json_str)];
 
         let mut response = reqwest::Client::new()
             .post(url)
-            .header("Content-Type", "application/x-www-form-urlencoded")
-            .body(body_text)
+            .form(&params)
             .send()
             .context("Post request failed")?;
         let value: json::Value = response.json().context("failed to parse body as json")?;

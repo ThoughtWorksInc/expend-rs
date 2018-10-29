@@ -11,7 +11,7 @@
         }
       ],
       "request": {
-        "body": "requestJobDescription={\n  \"credentials\": {\n    \"partnerUserId\": \"username\",\n    \"partnerUserSecret\": \"password\"\n  },\n  \"inputSettings\": {\n    \"hello\": 42\n  },\n  \"type\": \"some-type\"\n}",
+        "body": "requestJobDescription=%7B%22credentials%22%3A%7B%22partnerUserID%22%3A%22username%22%2C%22partnerUserSecret%22%3A%22password%22%7D%2C%22inputSettings%22%3A%7B%22hello%22%3A42%7D%2C%22type%22%3A%22some-type%22%7D",
         "headers": {
           "Content-Type": "application/x-www-form-urlencoded"
         },

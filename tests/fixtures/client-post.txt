@@ -1,10 +1,1 @@
-requestJobDescription={
-  "credentials": {
-    "partnerUserId": "username",
-    "partnerUserSecret": "password"
-  },
-  "inputSettings": {
-    "hello": 42
-  },
-  "type": "some-type"
-}
+requestJobDescription=%7B%22credentials%22%3A%7B%22partnerUserID%22%3A%22username%22%2C%22partnerUserSecret%22%3A%22password%22%7D%2C%22inputSettings%22%3A%7B%22hello%22%3A42%7D%2C%22type%22%3A%22some-type%22%7D
