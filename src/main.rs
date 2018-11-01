@@ -88,11 +88,13 @@ enum Command {
 
 #[derive(StructOpt)]
 struct FromFile {
-    /// The kind of payload, corresponds to the expensify 'type of job' to execute
-    payload_type: String,
     #[structopt(parse(from_os_str))]
     /// A path to the json or yaml file to load
     input: PathBuf,
+
+    #[structopt(default_value = "create")]
+    /// The kind of payload, corresponds to the expensify 'type of job' to execute.
+    payload_type: String,
 }
 
 pub enum Mode {

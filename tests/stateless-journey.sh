@@ -12,7 +12,7 @@ SUCCESSFULLY=0
 WITH_FAILURE=1
 
 (with "a valid sub-command"
-  SCMD=(from-file job-type file.yml)
+  SCMD=(from-file file.yml job-type)
   (with "only a username set"
     it "fails with an error message as the password is required additionally" && {
       WITH_SNAPSHOT="$snapshot/failure-only-username-set" \
@@ -36,10 +36,18 @@ WITH_FAILURE=1
     (with "dry-run mode"
       DRY=-n
       (when "creating a post from a yml file"
-        it "produces the expected output and does nothing, and fails gracefully" && {
-          WITH_SNAPSHOT="$snapshot/success-create-from-yml-file" \
-          expect_run ${WITH_FAILURE} "$exe" $DRY "${CREDS[@]}" from-file job-type <(echo 'somevalue: 42')
-        }
+        (with "a custom job type"
+          it "produces the expected output and does nothing, and fails gracefully" && {
+            WITH_SNAPSHOT="$snapshot/success-create-from-yml-file" \
+            expect_run ${WITH_FAILURE} "$exe" $DRY "${CREDS[@]}" from-file <(echo 'somevalue: 42') job-type
+          }
+        )
+        (with "no specifically set job type"
+          it "produces the expected output and does nothing, and fails gracefully" && {
+            WITH_SNAPSHOT="$snapshot/success-create-from-yml-file-default-jobtype" \
+            expect_run ${WITH_FAILURE} "$exe" $DRY "${CREDS[@]}" from-file <(echo 'somevalue: 42')
+          }
+        )
       )
     )
     # TODO: -yes mode (which is prompted otherwise) with actual mock server being up
