@@ -4,6 +4,7 @@ set -eu
 exe=${1:?First argument must be the executable to test}
 
 root="$(cd "${0%/*}" && pwd)"
+exe="$root/../$exe"
 # shellcheck disable=1090
 source "$root/utilities.sh"
 snapshot="$root/snapshots"
@@ -11,7 +12,7 @@ snapshot="$root/snapshots"
 SUCCESSFULLY=0
 WITH_FAILURE=1
 
-(with "a valid sub-command"
+(with "a valid 'from-file' sub-command"
   SCMD=(from-file file.yml job-type)
   (with "only a username set"
     it "fails with an error message as the password is required additionally" && {
@@ -51,5 +52,39 @@ WITH_FAILURE=1
       )
     )
     # TODO: -yes mode (which is prompted otherwise) with actual mock server being up
+  )
+)
+
+(sandbox
+  snapshot="$snapshot/context"
+  context_dir=(--from ./contexts)
+  (with "the 'context' sub-command"
+    (with 'no additional arguments and no context available'
+      it 'suggests that you should set the context first' && {
+        WITH_SNAPSHOT="$snapshot/failure-list-without-any-context" \
+        expect_run ${WITH_FAILURE} "$exe"  contexts "${context_dir[@]}"
+      }
+    )
+    (with 'the list subcommand and no context available'
+      it 'suggests that you should set the context first' && {
+        WITH_SNAPSHOT="$snapshot/failure-list-without-any-context" \
+        expect_run ${WITH_FAILURE} "$exe" contexts "${context_dir[@]}" list
+      }
+    )
+
+    (when 'setting the default context (with a directory override for sandboxing)'
+      it 'writes the expected file' && {
+        WITH_SNAPSHOT="$snapshot/success-set-default" \
+        expect_run ${SUCCESSFULLY} "$exe" contexts "${context_dir[@]}" set \
+            --project 'the project name sans sub-project' \
+            --email you@example.com
+      }
+      (when 'listing the available contexts'
+        it 'shows the single context we just created' && {
+          WITH_SNAPSHOT="$snapshot/success-list-contexts-default" \
+          expect_run ${SUCCESSFULLY} "$exe" contexts "${context_dir[@]}" list
+        }
+      )
+    )
   )
 )

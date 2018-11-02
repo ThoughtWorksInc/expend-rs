@@ -3,11 +3,11 @@ extern crate pact_consumer;
 extern crate pact_matching;
 extern crate serde_json;
 
-use std::str::FromStr;
-use pact_consumer::prelude::*;
-use pact_consumer::builders::InteractionBuilder;
-use pact_matching::models::{Pact, PactSpecification};
 use expend::expensify;
+use pact_consumer::builders::InteractionBuilder;
+use pact_consumer::prelude::*;
+use pact_matching::models::{Pact, PactSpecification};
+use std::str::FromStr;
 
 const ERR_RESPONSE: &str = include_str!("./fixtures/err-response.json");
 const OK_RESPONSE: &str = include_str!("./fixtures/ok-response.json");
@@ -52,8 +52,7 @@ fn expensify_post_failure() {
             .post(
                 "some-type",
                 serde_json::Value::from_str(r#"{"hello": 42}"#).unwrap()
-            )
-            .is_err()
+            ).is_err()
     );
 
     write_pact_file(&pact, "failure");
@@ -81,8 +80,7 @@ fn expensify_post_success() {
             .post(
                 "some-type",
                 serde_json::Value::from_str(r#"{"hello": 42}"#).unwrap()
-            )
-            .unwrap(),
+            ).unwrap(),
         serde_json::Value::from_str(OK_RESPONSE).unwrap()
     );
 

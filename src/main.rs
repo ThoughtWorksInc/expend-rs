@@ -4,18 +4,24 @@ extern crate failure_tools;
 extern crate keyring;
 #[macro_use]
 extern crate serde_derive;
+extern crate dirs;
 extern crate serde_json;
 extern crate serde_yaml;
 extern crate structopt;
 extern crate termion;
 extern crate username;
 
-use structopt::StructOpt;
-use failure_tools::ok_or_exit;
 use failure::{bail, format_err, Error, ResultExt};
-use std::{convert::From, io::{stderr, stdin}, path::PathBuf, str::FromStr};
-use termion::input::TermRead;
+use failure_tools::ok_or_exit;
 use keyring::Keyring;
+use std::{
+    convert::From,
+    io::{stderr, stdin},
+    path::PathBuf,
+    str::FromStr,
+};
+use structopt::StructOpt;
+use termion::input::TermRead;
 
 #[derive(Serialize, Deserialize)]
 struct Credentials {
@@ -75,7 +81,7 @@ struct Args {
     /// If set, the previously stored credentials will be cleared. This is useful if your credentials change.
     clear_keychain_entry: bool,
 
-    #[structopt(subcommand)] // Note that we mark a field as a subcommand
+    #[structopt(subcommand)]
     cmd: Command,
 }
 
@@ -84,6 +90,9 @@ enum Command {
     #[structopt(name = "from-file")]
     /// Load a file with structured data and use it as payload
     FromFile(FromFile),
+    #[structopt(name = "context", alias = "contexts")]
+    /// Interact with contexts - one or more sets of properties that are shared across many sub-commands
+    Context(Context),
 }
 
 #[derive(StructOpt)]
@@ -95,6 +104,24 @@ struct FromFile {
     #[structopt(default_value = "create")]
     /// The kind of payload, corresponds to the expensify 'type of job' to execute.
     payload_type: String,
+}
+
+#[derive(StructOpt)]
+struct Context {
+    #[structopt(parse(from_os_str), long = "from", alias = "at")]
+    /// The directory in which we should load for serialized context information.
+    /// Defaults to your <OS config dir>/expend-rs
+    from: Option<PathBuf>,
+
+    #[structopt(subcommand)]
+    cmd: ContextSubcommands,
+}
+
+#[derive(StructOpt)]
+enum ContextSubcommands {
+    #[structopt(name = "list")]
+    /// List all available named contexts
+    List,
 }
 
 pub enum Mode {
@@ -217,10 +244,24 @@ fn run() -> Result<(), Error> {
             payload_type,
             input,
         }) => {
-            let json_value: serde_json::Value =
-                serde_yaml::from_reader(std::fs::File::open(&input)
-                    .with_context(|_| format!("Failed to open file at '{}'", input.display()))?)?;
+            let json_value: serde_json::Value = serde_yaml::from_reader(
+                std::fs::File::open(&input)
+                    .with_context(|_| format!("Failed to open file at '{}'", input.display()))?,
+            )?;
             expend::Command::Payload(payload_type, json_value)
+        }
+        Command::Context(Context { from, cmd }) => {
+            let config_dir = from
+                .or_else(|| dirs::config_dir())
+                .map(|mut d| {
+                    d.push("expend-rs");
+                    d
+                }).ok_or_else(|| format_err!(""))?;
+            match cmd {
+                ContextSubcommands::List => {
+                    std::process::exit(0);
+                }
+            }
         }
     };
 
