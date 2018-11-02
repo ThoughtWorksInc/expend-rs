@@ -16,6 +16,7 @@ use failure_tools::ok_or_exit;
 use keyring::Keyring;
 use std::{
     convert::From,
+    fs::read_dir,
     io::{stderr, stdin},
     path::PathBuf,
     str::FromStr,
@@ -114,11 +115,11 @@ struct Context {
     from: Option<PathBuf>,
 
     #[structopt(subcommand)]
-    cmd: ContextSubcommands,
+    cmd: ContextSubcommand,
 }
 
 #[derive(StructOpt)]
-enum ContextSubcommands {
+enum ContextSubcommand {
     #[structopt(name = "list")]
     /// List all available named contexts
     List,
@@ -209,6 +210,31 @@ fn show_value(value: serde_json::Value) -> Result<(), Error> {
     Ok(())
 }
 
+fn handle_context(from: Option<PathBuf>, cmd: ContextSubcommand) -> Result<i32, Error> {
+    let config_dir = from
+        .or_else(|| dirs::config_dir())
+        .map(|mut d| {
+            d.push("expend-rs");
+            d
+        }).ok_or_else(|| format_err!("Could not find configuration directory"))?;
+
+    match cmd {
+        ContextSubcommand::List => {
+            for stem in read_dir(&config_dir)?
+                .filter_map(Result::ok)
+                .map(|e| e.path())
+                .filter_map(|p: PathBuf| match p.extension() {
+                    Some(ext) if ext == "json" => Some(p.clone()),
+                    _ => None,
+                }).map(|p| p.to_string_lossy().into_owned())
+            {
+                println!("{}", stem)
+            }
+            Ok(0)
+        }
+    }
+}
+
 fn run() -> Result<(), Error> {
     let opt: Args = Args::from_args();
     let (user, secret) = match (&opt.user_id, &opt.user_secret) {
@@ -251,17 +277,7 @@ fn run() -> Result<(), Error> {
             expend::Command::Payload(payload_type, json_value)
         }
         Command::Context(Context { from, cmd }) => {
-            let config_dir = from
-                .or_else(|| dirs::config_dir())
-                .map(|mut d| {
-                    d.push("expend-rs");
-                    d
-                }).ok_or_else(|| format_err!(""))?;
-            match cmd {
-                ContextSubcommands::List => {
-                    std::process::exit(0);
-                }
-            }
+            std::process::exit(handle_context(from, cmd)?);
         }
     };
 

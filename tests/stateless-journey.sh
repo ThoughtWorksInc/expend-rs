@@ -59,12 +59,6 @@ WITH_FAILURE=1
   snapshot="$snapshot/context"
   context_dir=(--from ./contexts)
   (with "the 'context' sub-command"
-    (with 'no additional arguments and no context available'
-      it 'suggests that you should set the context first' && {
-        WITH_SNAPSHOT="$snapshot/failure-list-without-any-context" \
-        expect_run ${WITH_FAILURE} "$exe"  contexts "${context_dir[@]}"
-      }
-    )
     (with 'the list subcommand and no context available'
       it 'suggests that you should set the context first' && {
         WITH_SNAPSHOT="$snapshot/failure-list-without-any-context" \
