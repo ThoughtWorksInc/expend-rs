@@ -40,6 +40,11 @@ pub struct Post {
     /// If set, the previously stored credentials will be cleared. This is useful if your credentials change.
     pub clear_keychain_entry: bool,
 
+    #[structopt(parse(from_os_str), long = "context-dir")]
+    /// The directory from which to load contexts.
+    /// Defaults to your <OS config dir>/expend-rs
+    pub context_from: Option<PathBuf>,
+
     #[structopt(subcommand)]
     pub cmd: PostSubcommands,
 }
@@ -49,6 +54,10 @@ pub enum PostSubcommands {
     #[structopt(name = "from-file")]
     /// Load a file with structured data and use it as payload
     FromFile {
+        #[structopt(long = "context", short = "c")]
+        /// The name of the context to use. If unset, the context values have to be provided by the user.
+        context: Option<String>,
+
         #[structopt(parse(from_os_str))]
         /// A path to the json or yaml file to load
         input: PathBuf,
@@ -62,7 +71,7 @@ pub enum PostSubcommands {
 #[derive(StructOpt)]
 pub struct Context {
     #[structopt(parse(from_os_str), long = "from", alias = "at")]
-    /// The directory in which we should load for serialized context information.
+    /// The directory in which we should look for serialized context information, or to which to write them.
     /// Defaults to your <OS config dir>/expend-rs
     pub from: Option<PathBuf>,
 

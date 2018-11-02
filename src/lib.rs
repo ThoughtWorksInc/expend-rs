@@ -12,7 +12,7 @@ use failure::Error;
 pub mod expensify;
 
 pub enum Command {
-    Payload(String, serde_json::Value),
+    Payload(Option<Context>, String, serde_json::Value),
 }
 
 #[derive(Serialize, Deserialize)]
@@ -31,7 +31,8 @@ pub fn execute(
 
     let client = expensify::Client::new(None, user_id, password);
     let (payload_type, payload) = match cmd {
-        Payload(pt, p) => (pt, p),
+        Payload(None, pt, p) => (pt, p),
+        Payload(Some(ctx), pt, mut p) => (pt, p),
     };
     pre_execute(&payload_type, &payload)?;
     client.post(&payload_type, payload)

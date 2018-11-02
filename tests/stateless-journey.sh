@@ -37,17 +37,31 @@ WITH_FAILURE=1
     (with "dry-run mode"
       DRY=-n
       (when "creating a post from a yml file"
-        (with "a custom job type"
-          it "produces the expected output and does nothing, and fails gracefully" && {
-            WITH_SNAPSHOT="$snapshot/success-create-from-yml-file" \
-            expect_run ${WITH_FAILURE} "$exe" post $DRY "${CREDS[@]}" from-file <(echo 'somevalue: 42') job-type
-          }
+        (with "an unset context"
+          (with "a custom job type"
+            it "produces the expected output and does nothing, and fails gracefully" && {
+              WITH_SNAPSHOT="$snapshot/success-create-from-yml-file" \
+              expect_run ${WITH_FAILURE} "$exe" post $DRY "${CREDS[@]}" from-file <(echo 'somevalue: 42') job-type
+            }
+          )
+          (with "no specifically set job type"
+            it "produces the expected output and does nothing, and fails gracefully" && {
+              WITH_SNAPSHOT="$snapshot/success-create-from-yml-file-default-jobtype" \
+              expect_run ${WITH_FAILURE} "$exe" post $DRY "${CREDS[@]}" from-file <(echo 'somevalue: 42')
+            }
+          )
         )
-        (with "no specifically set job type"
-          it "produces the expected output and does nothing, and fails gracefully" && {
-            WITH_SNAPSHOT="$snapshot/success-create-from-yml-file-default-jobtype" \
-            expect_run ${WITH_FAILURE} "$exe" post $DRY "${CREDS[@]}" from-file <(echo 'somevalue: 42')
-          }
+        (sandbox
+          (with "the default context set"
+            step "(setting the context)"
+            expect_run ${SUCCESSFULLY} "$exe" context --at . set --email me@example.com --project 'project code'
+            (when "creating a post from a yml file with explicit context"
+              it "produces the expected output with the context integrated into the payload, does nothing, and fails gracefully" && {
+                WITH_SNAPSHOT="$snapshot/success-create-from-yml-file-default-jobtype-with-context" \
+                expect_run ${WITH_FAILURE} "$exe" post --context-dir . $DRY "${CREDS[@]}" from-file --context  default <(echo 'somevalue: 42')
+              }
+            )
+          )
         )
       )
     )

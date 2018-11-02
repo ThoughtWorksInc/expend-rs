@@ -17,6 +17,7 @@ use failure::{bail, format_err, Error, ResultExt};
 use failure_tools::ok_or_exit;
 use keyring::Keyring;
 use options::*;
+use std::path::Path;
 use std::{
     convert::From,
     fs::{create_dir_all, read_dir, File},
@@ -140,22 +141,29 @@ fn show_value(value: serde_json::Value) -> Result<(), Error> {
     Ok(())
 }
 
-fn handle_context(from: Option<PathBuf>, cmd: ContextSubcommand) -> Result<i32, Error> {
-    let config_dir = from
+fn context_from(directory: Option<PathBuf>) -> Result<PathBuf, Error> {
+    directory
         .or_else(|| {
             dirs::config_dir().map(|mut d| {
                 d.push("expend-rs");
                 d
             })
-        }).ok_or_else(|| format_err!("Could not find configuration directory"))?;
+        }).ok_or_else(|| format_err!("Could not find configuration directory"))
+}
 
+fn context_file(directory: &Path, name: &str) -> PathBuf {
+    directory.join(format!("{}.json", name))
+}
+
+fn handle_context(from: Option<PathBuf>, cmd: ContextSubcommand) -> Result<i32, Error> {
+    let config_dir = context_from(from)?;
     match cmd {
         ContextSubcommand::Set(SetContext {
             name,
             project,
             email,
         }) => {
-            let mut config_dir = config_dir;
+            let config_dir = config_dir;
             create_dir_all(&config_dir).with_context(|_| {
                 format!(
                     "Could not create configuration directory at '{}'",
@@ -163,8 +171,7 @@ fn handle_context(from: Option<PathBuf>, cmd: ContextSubcommand) -> Result<i32, 
                 )
             })?;
 
-            config_dir.push(format!("{}.json", name));
-            let context_file = config_dir;
+            let context_file = context_file(&config_dir, &name);
 
             let context = expend::Context { project, email };
             serde_json::to_writer_pretty(
@@ -240,16 +247,29 @@ fn run() -> Result<(), Error> {
                 (false, false) => Mode::Confirm,
             };
 
+            let context_dir = context_from(post.context_from)?;
+
             let cmd = match post.cmd {
                 PostSubcommands::FromFile {
+                    context,
                     payload_type,
                     input,
                 } => {
+                    let context = context.map(|c| context_file(&context_dir, &c));
+                    let context: Option<expend::Context> = match context {
+                        Some(file) => {
+                            Some(serde_json::from_reader(File::open(&file).with_context(
+                                |_| format!("Could not read context file at '{}'", file.display()),
+                            )?)?)
+                        }
+                        None => None,
+                    };
+
                     let json_value: serde_json::Value =
                         serde_yaml::from_reader(std::fs::File::open(&input).with_context(
                             |_| format!("Failed to open file at '{}'", input.display()),
                         )?)?;
-                    expend::Command::Payload(payload_type, json_value)
+                    expend::Command::Payload(context, payload_type, json_value)
                 }
             };
 
