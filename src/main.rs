@@ -16,7 +16,7 @@ use failure_tools::ok_or_exit;
 use keyring::Keyring;
 use std::{
     convert::From,
-    fs::read_dir,
+    fs::{create_dir_all, read_dir, File},
     io::{stderr, stdin},
     path::PathBuf,
     str::FromStr,
@@ -56,7 +56,17 @@ impl FromStr for Credentials {
 #[derive(StructOpt)]
 #[structopt(raw(setting = "structopt::clap::AppSettings::ColoredHelp"))]
 #[structopt(raw(setting = "structopt::clap::AppSettings::SubcommandRequired"))]
-struct Args {
+enum Args {
+    #[structopt(name = "post")]
+    /// Load a file with structured data and use it as payload
+    Post(Post),
+    #[structopt(name = "context", alias = "contexts")]
+    /// Interact with contexts - one or more sets of properties that are shared across many sub-commands
+    Context(Context),
+}
+
+#[derive(StructOpt)]
+struct Post {
     #[structopt(long = "user-id", short = "u")]
     /// The user id, see https://integrations.expensify.com/Integration-Server/doc/#authentication
     user_id: Option<String>,
@@ -83,28 +93,22 @@ struct Args {
     clear_keychain_entry: bool,
 
     #[structopt(subcommand)]
-    cmd: Command,
+    cmd: PostSubcommands,
 }
 
 #[derive(StructOpt)]
-enum Command {
+enum PostSubcommands {
     #[structopt(name = "from-file")]
     /// Load a file with structured data and use it as payload
-    FromFile(FromFile),
-    #[structopt(name = "context", alias = "contexts")]
-    /// Interact with contexts - one or more sets of properties that are shared across many sub-commands
-    Context(Context),
-}
+    FromFile {
+        #[structopt(parse(from_os_str))]
+        /// A path to the json or yaml file to load
+        input: PathBuf,
 
-#[derive(StructOpt)]
-struct FromFile {
-    #[structopt(parse(from_os_str))]
-    /// A path to the json or yaml file to load
-    input: PathBuf,
-
-    #[structopt(default_value = "create")]
-    /// The kind of payload, corresponds to the expensify 'type of job' to execute.
-    payload_type: String,
+        #[structopt(default_value = "create")]
+        /// The kind of payload, corresponds to the expensify 'type of job' to execute.
+        payload_type: String,
+    },
 }
 
 #[derive(StructOpt)]
@@ -123,6 +127,24 @@ enum ContextSubcommand {
     #[structopt(name = "list")]
     /// List all available named contexts
     List,
+    #[structopt(name = "set")]
+    /// Set the optionally named context to the given values
+    Set(SetContext),
+}
+
+#[derive(StructOpt)]
+struct SetContext {
+    #[structopt(long = "name", short = "n", default_value = "default")]
+    /// The name of the context.
+    name: String,
+
+    #[structopt(long = "project", short = "p")]
+    /// The project identifier. It's exactly what you see when selecting the project in Expensify
+    project: String,
+
+    #[structopt(long = "email", short = "e")]
+    /// The email address used to login to expensify.
+    email: String,
 }
 
 pub enum Mode {
@@ -212,23 +234,60 @@ fn show_value(value: serde_json::Value) -> Result<(), Error> {
 
 fn handle_context(from: Option<PathBuf>, cmd: ContextSubcommand) -> Result<i32, Error> {
     let config_dir = from
-        .or_else(|| dirs::config_dir())
-        .map(|mut d| {
-            d.push("expend-rs");
-            d
+        .or_else(|| {
+            dirs::config_dir().map(|mut d| {
+                d.push("expend-rs");
+                d
+            })
         }).ok_or_else(|| format_err!("Could not find configuration directory"))?;
 
     match cmd {
+        ContextSubcommand::Set(SetContext {
+            name,
+            project,
+            email,
+        }) => {
+            let mut config_dir = config_dir;
+            create_dir_all(&config_dir).with_context(|_| {
+                format!(
+                    "Could not create configuration directory at '{}'",
+                    config_dir.display()
+                )
+            })?;
+
+            config_dir.push(format!("{}.json", name));
+            let context_file = config_dir;
+
+            let context = expend::Context { project, email };
+            serde_json::to_writer_pretty(
+                File::create(&context_file).with_context(|_| {
+                    format!("Failed to open file at '{}'", context_file.display())
+                })?,
+                &context,
+            )?;
+            println!("Context '{}' set successfully", name);
+            Ok(0)
+        }
+
         ContextSubcommand::List => {
+            if !config_dir.is_dir() {
+                bail!("No contexts created - use 'context set' to create one.");
+            }
+
+            let mut count = 0;
             for stem in read_dir(&config_dir)?
                 .filter_map(Result::ok)
                 .map(|e| e.path())
                 .filter_map(|p: PathBuf| match p.extension() {
                     Some(ext) if ext == "json" => Some(p.clone()),
                     _ => None,
-                }).map(|p| p.to_string_lossy().into_owned())
+                }).filter_map(|p| p.file_stem().map(|s| s.to_string_lossy().into_owned()))
             {
-                println!("{}", stem)
+                println!("{}", stem);
+                count += 1;
+            }
+            if count == 0 {
+                bail!("Did not find a single contet. Create one using 'context set'.");
             }
             Ok(0)
         }
@@ -237,53 +296,62 @@ fn handle_context(from: Option<PathBuf>, cmd: ContextSubcommand) -> Result<i32, 
 
 fn run() -> Result<(), Error> {
     let opt: Args = Args::from_args();
-    let (user, secret) = match (&opt.user_id, &opt.user_secret) {
-        (Some(ref user), Some(ref secret)) => (user.to_owned(), secret.to_owned()),
-        (Some(_), None) => exit_with("Please provide the secret as well with --user-secret."),
-        (None, Some(_)) => exit_with("Please provide the user as well with --user-id."),
-        (None, None) => match if opt.no_keychain {
-            None
-        } else {
-            get_or_clear_credentials_from_keychain(opt.clear_keychain_entry)?
-        } {
-            Some(creds) => creds,
-            None => query_credentials_from_user().and_then(|creds| {
-                if opt.no_keychain {
-                    Ok(creds)
-                } else {
-                    eprintln!("Storing credentials in keychain - use --no-keychain to disable.");
-                    store_credentials_in_keychain(creds)
+
+    Ok(match opt {
+        Args::Post(post) => {
+            let (user, secret) = match (&post.user_id, &post.user_secret) {
+                (Some(ref user), Some(ref secret)) => (user.to_owned(), secret.to_owned()),
+                (Some(_), None) => {
+                    exit_with("Please provide the secret as well with --user-secret.")
                 }
-            })?,
-        },
-    };
+                (None, Some(_)) => exit_with("Please provide the user as well with --user-id."),
+                (None, None) => match if post.no_keychain {
+                    None
+                } else {
+                    get_or_clear_credentials_from_keychain(post.clear_keychain_entry)?
+                } {
+                    Some(creds) => creds,
+                    None => query_credentials_from_user().and_then(|creds| {
+                        if post.no_keychain {
+                            Ok(creds)
+                        } else {
+                            eprintln!(
+                                "Storing credentials in keychain - use --no-keychain to disable."
+                            );
+                            store_credentials_in_keychain(creds)
+                        }
+                    })?,
+                },
+            };
 
-    let mode = match (opt.dry_run, opt.yes) {
-        (true, true) => exit_with("--auto-confirm and --dry-run are mutually exclusive."),
-        (true, false) => Mode::DryRun,
-        (false, true) => Mode::AutoConfirm,
-        (false, false) => Mode::Confirm,
-    };
+            let mode = match (post.dry_run, post.yes) {
+                (true, true) => exit_with("--auto-confirm and --dry-run are mutually exclusive."),
+                (true, false) => Mode::DryRun,
+                (false, true) => Mode::AutoConfirm,
+                (false, false) => Mode::Confirm,
+            };
 
-    let cmd = match opt.cmd {
-        Command::FromFile(FromFile {
-            payload_type,
-            input,
-        }) => {
-            let json_value: serde_json::Value = serde_yaml::from_reader(
-                std::fs::File::open(&input)
-                    .with_context(|_| format!("Failed to open file at '{}'", input.display()))?,
-            )?;
-            expend::Command::Payload(payload_type, json_value)
+            let cmd = match post.cmd {
+                PostSubcommands::FromFile {
+                    payload_type,
+                    input,
+                } => {
+                    let json_value: serde_json::Value =
+                        serde_yaml::from_reader(std::fs::File::open(&input).with_context(
+                            |_| format!("Failed to open file at '{}'", input.display()),
+                        )?)?;
+                    expend::Command::Payload(payload_type, json_value)
+                }
+            };
+
+            expend::execute(user, secret, cmd, |type_name, value| {
+                confirm_payload(mode, type_name, value)
+            }).and_then(show_value)?
         }
-        Command::Context(Context { from, cmd }) => {
+        Args::Context(Context { from, cmd }) => {
             std::process::exit(handle_context(from, cmd)?);
         }
-    };
-
-    expend::execute(user, secret, cmd, |type_name, value| {
-        confirm_payload(mode, type_name, value)
-    }).and_then(show_value)
+    })
 }
 
 fn main() {

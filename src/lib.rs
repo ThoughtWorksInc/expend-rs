@@ -3,6 +3,8 @@ extern crate failure;
 extern crate reqwest;
 extern crate serde;
 #[macro_use]
+extern crate serde_derive;
+#[macro_use]
 extern crate serde_json;
 
 use failure::Error;
@@ -11,6 +13,12 @@ pub mod expensify;
 
 pub enum Command {
     Payload(String, serde_json::Value),
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct Context {
+    pub project: String,
+    pub email: String,
 }
 
 pub fn execute(

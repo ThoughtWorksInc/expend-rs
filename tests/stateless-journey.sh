@@ -12,18 +12,18 @@ snapshot="$root/snapshots"
 SUCCESSFULLY=0
 WITH_FAILURE=1
 
-(with "a valid 'from-file' sub-command"
+(with "a valid 'post from-file' sub-command"
   SCMD=(from-file file.yml job-type)
   (with "only a username set"
     it "fails with an error message as the password is required additionally" && {
       WITH_SNAPSHOT="$snapshot/failure-only-username-set" \
-      expect_run ${WITH_FAILURE} "$exe" --user-id=user "${SCMD[@]}"
+      expect_run ${WITH_FAILURE} "$exe" post --user-id=user "${SCMD[@]}"
     }
   )
   (with "only a password set"
     it "fails with an error message as the username is required additionally" && {
       WITH_SNAPSHOT="$snapshot/failure-only-password-set" \
-      expect_run ${WITH_FAILURE} "$exe" --user-secret=secret "${SCMD[@]}"
+      expect_run ${WITH_FAILURE} "$exe" post --user-secret=secret "${SCMD[@]}"
     }
   )
   (with "password and username provided with arguments"
@@ -31,7 +31,7 @@ WITH_FAILURE=1
     (with "both dry-run and aLways-confirm set"
       it "fails with an error message indicating that those are mutually exclusive" && {
         WITH_SNAPSHOT="$snapshot/failure-dry-run-and-always-confirm-are-mutually-exclusive" \
-        expect_run ${WITH_FAILURE} "$exe" -n -y "${CREDS[@]}" "${SCMD[@]}"
+        expect_run ${WITH_FAILURE} "$exe" post -n -y "${CREDS[@]}" "${SCMD[@]}"
       }
     )
     (with "dry-run mode"
@@ -40,13 +40,13 @@ WITH_FAILURE=1
         (with "a custom job type"
           it "produces the expected output and does nothing, and fails gracefully" && {
             WITH_SNAPSHOT="$snapshot/success-create-from-yml-file" \
-            expect_run ${WITH_FAILURE} "$exe" $DRY "${CREDS[@]}" from-file <(echo 'somevalue: 42') job-type
+            expect_run ${WITH_FAILURE} "$exe" post $DRY "${CREDS[@]}" from-file <(echo 'somevalue: 42') job-type
           }
         )
         (with "no specifically set job type"
           it "produces the expected output and does nothing, and fails gracefully" && {
             WITH_SNAPSHOT="$snapshot/success-create-from-yml-file-default-jobtype" \
-            expect_run ${WITH_FAILURE} "$exe" $DRY "${CREDS[@]}" from-file <(echo 'somevalue: 42')
+            expect_run ${WITH_FAILURE} "$exe" post $DRY "${CREDS[@]}" from-file <(echo 'somevalue: 42')
           }
         )
       )
@@ -67,12 +67,16 @@ WITH_FAILURE=1
     )
 
     (when 'setting the default context (with a directory override for sandboxing)'
-      it 'writes the expected file' && {
+      it 'succeeds' && {
         WITH_SNAPSHOT="$snapshot/success-set-default" \
         expect_run ${SUCCESSFULLY} "$exe" contexts "${context_dir[@]}" set \
             --project 'the project name sans sub-project' \
             --email you@example.com
       }
+      it 'writes the expected file' && {
+        expect_snapshot "$snapshot/context-dir-with-default" .
+      }
+
       (when 'listing the available contexts'
         it 'shows the single context we just created' && {
           WITH_SNAPSHOT="$snapshot/success-list-contexts-default" \
