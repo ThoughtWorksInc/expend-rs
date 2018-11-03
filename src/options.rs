@@ -86,20 +86,24 @@ pub enum ContextSubcommand {
     List,
     #[structopt(name = "set")]
     /// Set the optionally named context to the given values
-    Set(SetContext),
-}
+    Set {
+        #[structopt(long = "name", short = "n", default_value = "default")]
+        /// The name of the context.
+        name: String,
 
-#[derive(StructOpt)]
-pub struct SetContext {
-    #[structopt(long = "name", short = "n", default_value = "default")]
-    /// The name of the context.
-    pub name: String,
+        #[structopt(long = "project", short = "p")]
+        /// The project identifier. It's exactly what you see when selecting the project in Expensify
+        project: String,
 
-    #[structopt(long = "project", short = "p")]
-    /// The project identifier. It's exactly what you see when selecting the project in Expensify
-    pub project: String,
+        #[structopt(long = "email", short = "e")]
+        /// The email address used to login to expensify.
+        email: String,
+    },
 
-    #[structopt(long = "email", short = "e")]
-    /// The email address used to login to expensify.
-    pub email: String,
+    #[structopt(name = "get")]
+    Get {
+        #[structopt(default_value = "default")]
+        /// The name of the context to retrieve.
+        name: String,
+    },
 }

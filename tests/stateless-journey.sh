@@ -99,6 +99,12 @@ WITH_FAILURE=1
           expect_run ${SUCCESSFULLY} "$exe" contexts "${context_dir[@]}" list
         }
       )
+      (when 'getting the newly created context'
+        it 'shows it as yaml' && {
+          WITH_SNAPSHOT="$snapshot/success-get-context-default" \
+          expect_run ${SUCCESSFULLY} "$exe" contexts "${context_dir[@]}" get
+        }
+      )
     )
   )
 )
