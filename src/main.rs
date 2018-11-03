@@ -18,13 +18,8 @@ use failure_tools::ok_or_exit;
 use keyring::Keyring;
 use options::*;
 use std::path::Path;
-use std::{
-    convert::From,
-    fs::{create_dir_all, read_dir, File},
-    io::{stderr, stdin},
-    path::PathBuf,
-    str::FromStr,
-};
+use std::{convert::From, fs::{create_dir_all, read_dir, File}, io::{stderr, stdin}, path::PathBuf,
+          str::FromStr};
 use termion::input::TermRead;
 
 #[derive(Serialize, Deserialize)]
@@ -148,7 +143,8 @@ fn context_from(directory: Option<PathBuf>) -> Result<PathBuf, Error> {
                 d.push("expend-rs");
                 d
             })
-        }).ok_or_else(|| format_err!("Could not find configuration directory"))
+        })
+        .ok_or_else(|| format_err!("Could not find configuration directory"))
 }
 
 fn context_file(directory: &Path, name: &str) -> PathBuf {
@@ -196,7 +192,8 @@ fn handle_context(from: Option<PathBuf>, cmd: ContextSubcommand) -> Result<i32, 
                 .filter_map(|p: PathBuf| match p.extension() {
                     Some(ext) if ext == "json" => Some(p.clone()),
                     _ => None,
-                }).filter_map(|p| p.file_stem().map(|s| s.to_string_lossy().into_owned()))
+                })
+                .filter_map(|p| p.file_stem().map(|s| s.to_string_lossy().into_owned()))
             {
                 println!("{}", stem);
                 count += 1;
@@ -257,18 +254,17 @@ fn run() -> Result<(), Error> {
                 } => {
                     let context = context.map(|c| context_file(&context_dir, &c));
                     let context: Option<expend::Context> = match context {
-                        Some(file) => {
-                            Some(serde_json::from_reader(File::open(&file).with_context(
-                                |_| format!("Could not read context file at '{}'", file.display()),
-                            )?)?)
-                        }
+                        Some(file) => Some(serde_json::from_reader(File::open(&file)
+                            .with_context(|_| {
+                                format!("Could not read context file at '{}'", file.display())
+                            })?)?),
                         None => None,
                     };
 
                     let json_value: serde_json::Value =
-                        serde_yaml::from_reader(std::fs::File::open(&input).with_context(
-                            |_| format!("Failed to open file at '{}'", input.display()),
-                        )?)?;
+                        serde_yaml::from_reader(std::fs::File::open(&input).with_context(|_| {
+                            format!("Failed to open file at '{}'", input.display())
+                        })?)?;
                     expend::Command::Payload(context, payload_type, json_value)
                 }
             };

@@ -1,0 +1,28 @@
+{
+    "type": "expenses",
+    "employeeEmail": "someone@example.com",
+    "transactionList": [
+        {
+            "created": "1982-01-15",
+            "currency": "EUR",
+            "merchant": "20 km @ €0.3 / km",
+            "amount": 600,
+            "category": "Mileage/Parking/Tolls",
+            "tag": "engagement name",
+            "billable": false,
+            "reimbursable": true,
+            "comment": "something with cars"
+        },
+        {
+            "created": "1982-01-16",
+            "currency": "EUR",
+            "merchant": "1 * Germany Day Trip > 8 Hours @ €12.00",
+            "amount": 1200,
+            "category": "Per Diem/Stipend (pre-approved)",
+            "tag": "engagement name",
+            "billable": false,
+            "reimbursable": true,
+            "comment": "something away from home"
+        }
+    ]
+}

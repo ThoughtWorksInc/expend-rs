@@ -8,6 +8,7 @@ exe="$root/../$exe"
 # shellcheck disable=1090
 source "$root/utilities.sh"
 snapshot="$root/snapshots"
+fixture="$root/fixtures"
 
 SUCCESSFULLY=0
 WITH_FAILURE=1
@@ -55,10 +56,11 @@ WITH_FAILURE=1
           (with "the default context set"
             step "(setting the context)"
             expect_run ${SUCCESSFULLY} "$exe" context --at . set --email me@example.com --project 'project code'
+
             (when "creating a post from a yml file with explicit context"
               it "produces the expected output with the context integrated into the payload, does nothing, and fails gracefully" && {
                 WITH_SNAPSHOT="$snapshot/success-create-from-yml-file-default-jobtype-with-context" \
-                expect_run ${WITH_FAILURE} "$exe" post --context-dir . $DRY "${CREDS[@]}" from-file --context  default <(echo 'somevalue: 42')
+                expect_run ${WITH_FAILURE} "$exe" post --context-dir . $DRY "${CREDS[@]}" from-file --context  default "$fixture/transaction-list.json"
               }
             )
           )

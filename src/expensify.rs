@@ -24,11 +24,10 @@ impl Client {
         password: impl Into<String>,
     ) -> Client {
         Client {
-            host: host
-                .unwrap_or_else(|| {
-                    Url::from_str("https://integrations.expensify.com")
-                        .expect("default url to be correct")
-                }).into(),
+            host: host.unwrap_or_else(|| {
+                Url::from_str("https://integrations.expensify.com")
+                    .expect("default url to be correct")
+            }).into(),
             username: username.into(),
             password: password.into(),
         }
@@ -39,8 +38,7 @@ impl Client {
         request_type: &str,
         input: impl Serialize,
     ) -> Result<json::Value, failure::Error> {
-        let url = self
-            .host
+        let url = self.host
             .join(ENDPOINT)
             .expect("parsing of static endpoint");
 
