@@ -57,7 +57,7 @@ pub struct Context {
 }
 
 impl Context {
-    pub fn monday_that_week(&self) -> Result<Date<Utc>, Error> {
+    pub fn monday_of_reference_date(&self) -> Result<Date<Utc>, Error> {
         let d = self.reference_date.unwrap_or_else(Utc::today);
         d.checked_sub_signed(Duration::days(d.weekday().num_days_from_monday() as i64))
             .ok_or_else(|| format_err!("Failed to compute Monday from the given date."))

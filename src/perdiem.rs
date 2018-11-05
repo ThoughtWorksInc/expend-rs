@@ -42,7 +42,7 @@ impl PerDiem {
         let mut ts = Vec::new();
         match self {
             Weekdays => {
-                let monday = ctx.monday_that_week()?;
+                let monday = ctx.monday_of_reference_date()?;
                 let friday = monday.checked_add_signed(Duration::days(5 - 1)).unwrap();
 
                 ts.push(TransactionListElement {
