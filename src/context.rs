@@ -1,0 +1,93 @@
+use failure::{bail, format_err, Error, ResultExt};
+use options::ContextSubcommand;
+use std::{
+    fs::{create_dir_all, read_dir, File},
+    io::stdout,
+    path::{Path, PathBuf},
+};
+
+pub fn into_directory_path(directory: Option<PathBuf>) -> Result<PathBuf, Error> {
+    directory
+        .or_else(|| {
+            dirs::config_dir().map(|mut d| {
+                d.push("expend-rs");
+                d
+            })
+        }).ok_or_else(|| format_err!("Could not find configuration directory"))
+}
+
+pub fn file_path(directory: &Path, name: &str) -> PathBuf {
+    directory.join(format!("{}.json", name))
+}
+
+pub fn handle(from: Option<PathBuf>, cmd: ContextSubcommand) -> Result<(), Error> {
+    let config_dir = into_directory_path(from)?;
+    Ok(match cmd {
+        ContextSubcommand::Get { name } => {
+            let ctx = from_file_path(&file_path(&config_dir, &name))?;
+            serde_yaml::to_writer(stdout(), &ctx)?;
+        }
+        ContextSubcommand::Set {
+            name,
+            project,
+            email,
+        } => {
+            let config_dir = config_dir;
+            create_dir_all(&config_dir).with_context(|_| {
+                format!(
+                    "Could not create configuration directory at '{}'",
+                    config_dir.display()
+                )
+            })?;
+
+            let context_file = file_path(&config_dir, &name);
+
+            let context = expend::Context { project, email };
+            serde_json::to_writer_pretty(
+                File::create(&context_file).with_context(|_| {
+                    format!("Failed to open file at '{}'", context_file.display())
+                })?,
+                &context,
+            )?;
+            println!("Context '{}' set successfully", name);
+        }
+
+        ContextSubcommand::List => {
+            if !config_dir.is_dir() {
+                bail!("No contexts created - use 'context set' to create one.");
+            }
+
+            let mut count = 0;
+            for stem in read_dir(&config_dir)?
+                .filter_map(Result::ok)
+                .map(|e| e.path())
+                .filter_map(|p: PathBuf| match p.extension() {
+                    Some(ext) if ext == "json" => Some(p.clone()),
+                    _ => None,
+                }).filter_map(|p| path_to_context_name(&p))
+            {
+                println!("{}", stem);
+                count += 1;
+            }
+            if count == 0 {
+                bail!("Did not find a single contet. Create one using 'context set'.");
+            }
+        }
+    })
+}
+
+fn path_to_context_name(file: &Path) -> Option<String> {
+    file.file_stem().map(|s| s.to_string_lossy().into_owned())
+}
+
+pub fn from_file_path(file: &Path) -> Result<expend::Context, Error> {
+    Ok(serde_json::from_reader(File::open(&file).with_context(
+        |_| {
+            format!(
+                "Could not read context file at '{}'. Use 'context set \"{}\"' to create one.",
+                file.display(),
+                path_to_context_name(file).unwrap_or_else(|| "default".to_owned())
+            )
+        },
+    )?)?)
+}
