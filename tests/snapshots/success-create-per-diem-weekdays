@@ -1,0 +1,7 @@
+The following 'create' payload would be sent to Expensify:
+---
+employeeEmail: ""
+transactionList: []
+type: expense
+
+error: Aborted before post due to dry-run mode.
