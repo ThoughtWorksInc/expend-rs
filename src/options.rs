@@ -51,6 +51,18 @@ pub struct Post {
 
 #[derive(StructOpt)]
 pub enum PostSubcommands {
+    #[structopt(name = "per-diem")]
+    /// Post a per-diem, relative to the current week, by default
+    PerDiem {
+        #[structopt(long = "context", short = "c", default_value = "default")]
+        /// The name of the context to use.
+        context: String,
+
+        /// The kind of per-diem to file. Can be one of the following
+        /// weekdays
+        ///   - Monday to Friday
+        kind: String,
+    },
     #[structopt(name = "from-file")]
     /// Load a file with structured data and use it as payload
     FromFile {

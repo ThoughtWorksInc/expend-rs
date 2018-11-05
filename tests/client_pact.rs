@@ -52,8 +52,7 @@ fn expensify_post_failure() {
             .post(
                 "some-type",
                 serde_json::Value::from_str(r#"{"hello": 42}"#).unwrap()
-            )
-            .is_err()
+            ).is_err()
     );
 
     write_pact_file(&pact, "failure");
@@ -81,8 +80,7 @@ fn expensify_post_success() {
             .post(
                 "some-type",
                 serde_json::Value::from_str(r#"{"hello": 42}"#).unwrap()
-            )
-            .unwrap(),
+            ).unwrap(),
         serde_json::Value::from_str(OK_RESPONSE).unwrap()
     );
 

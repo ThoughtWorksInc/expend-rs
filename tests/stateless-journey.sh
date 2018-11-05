@@ -13,7 +13,10 @@ fixture="$root/fixtures"
 SUCCESSFULLY=0
 WITH_FAILURE=1
 
+
 (with "a 'post' subcommand"
+  CREDS=(--user-id user --user-secret secret)
+  DRY=-n
   (with "the 'from-file' subcommand"
     SCMD=(from-file file.yml job-type)
     (with "only a username set"
@@ -29,7 +32,6 @@ WITH_FAILURE=1
       }
     )
     (with "password and username provided with arguments"
-      CREDS=(--user-id user --user-secret secret)
       (with "both dry-run and aLways-confirm set"
         it "fails with an error message indicating that those are mutually exclusive" && {
           WITH_SNAPSHOT="$snapshot/failure-dry-run-and-always-confirm-are-mutually-exclusive" \
@@ -37,7 +39,6 @@ WITH_FAILURE=1
         }
       )
       (with "dry-run mode"
-        DRY=-n
         (when "creating a post from a yml file"
           (with "an unset context"
             (with "a custom job type"
@@ -69,6 +70,37 @@ WITH_FAILURE=1
         )
       )
       # TODO: -yes mode (which is prompted otherwise) with actual mock server being up
+    )
+  )
+
+  (with "the 'per-diem' subcommand"
+    (with "dry-run mode"
+      (sandbox 
+        (with "no context available"
+          it "fails telling how to create a context" && {
+            WITH_SNAPSHOT="$snapshot/failure-create-per-diem-missing-context" \
+            expect_run ${WITH_FAILURE} "$exe" post --context-dir . $DRY "${CREDS[@]}" per-diem weekdays
+          }
+        )
+        (with "a default context available"
+          step "(setting the context)"
+          expect_run ${SUCCESSFULLY} "$exe" context --at . set --email me@example.com --project 'project code'
+
+          (when "using the an unknown per-diem kind"
+            it "fails gracefully" && {
+              WITH_SNAPSHOT="$snapshot/failure-create-per-diem-unknown-kind" \
+              expect_run ${WITH_FAILURE} "$exe" post --context-dir . $DRY "${CREDS[@]}" per-diem foobar
+            }
+          )
+
+          (when "using the 'weekdays' kind"
+            it "succeeds and creates a properly formatted payload" && {
+              WITH_SNAPSHOT="$snapshot/success-create-per-diem-weekdays" \
+              expect_run ${WITH_FAILURE} "$exe" post --context-dir . $DRY "${CREDS[@]}" per-diem weekdays
+            }
+          )
+        )
+      )
     )
   )
 )

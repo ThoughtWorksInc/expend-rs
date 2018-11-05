@@ -18,8 +18,13 @@ use failure_tools::ok_or_exit;
 use keyring::Keyring;
 use options::*;
 use std::path::Path;
-use std::{convert::From, fs::{create_dir_all, read_dir, File}, io::{stderr, stdin, stdout},
-          path::PathBuf, str::FromStr};
+use std::{
+    convert::From,
+    fs::{create_dir_all, read_dir, File},
+    io::{stderr, stdin, stdout},
+    path::PathBuf,
+    str::FromStr,
+};
 use termion::input::TermRead;
 
 #[derive(Serialize, Deserialize)]
@@ -143,8 +148,7 @@ fn into_context_dir(directory: Option<PathBuf>) -> Result<PathBuf, Error> {
                 d.push("expend-rs");
                 d
             })
-        })
-        .ok_or_else(|| format_err!("Could not find configuration directory"))
+        }).ok_or_else(|| format_err!("Could not find configuration directory"))
 }
 
 fn context_file(directory: &Path, name: &str) -> PathBuf {
@@ -195,8 +199,7 @@ fn handle_context(from: Option<PathBuf>, cmd: ContextSubcommand) -> Result<(), E
                 .filter_map(|p: PathBuf| match p.extension() {
                     Some(ext) if ext == "json" => Some(p.clone()),
                     _ => None,
-                })
-                .filter_map(|p| path_to_context_name(&p))
+                }).filter_map(|p| path_to_context_name(&p))
             {
                 println!("{}", stem);
                 count += 1;
@@ -265,6 +268,10 @@ fn run() -> Result<(), Error> {
             let context_dir = into_context_dir(post.context_from)?;
 
             let cmd = match post.cmd {
+                PostSubcommands::PerDiem { context, kind: _ } => {
+                    let _context = context_from_file(&context_file(&context_dir, &context))?;
+                    unimplemented!()
+                }
                 PostSubcommands::FromFile {
                     context,
                     payload_type,
@@ -277,9 +284,9 @@ fn run() -> Result<(), Error> {
                     };
 
                     let json_value: serde_json::Value =
-                        serde_yaml::from_reader(std::fs::File::open(&input).with_context(|_| {
-                            format!("Failed to open file at '{}'", input.display())
-                        })?)?;
+                        serde_yaml::from_reader(std::fs::File::open(&input).with_context(
+                            |_| format!("Failed to open file at '{}'", input.display()),
+                        )?)?;
                     expend::Command::Payload(context, payload_type, json_value)
                 }
             };
