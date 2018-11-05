@@ -1,5 +1,6 @@
 extern crate chrono;
 
+use self::chrono::{Date, Utc};
 use std::path::PathBuf;
 use structopt::StructOpt;
 
@@ -63,7 +64,7 @@ pub enum PostSubcommands {
         )]
         /// The date of a day in the week that your per-diem dates should assume, formatted
         /// like 2018-09-25.
-        weekdate: Option<chrono::Date<chrono::Utc>>,
+        weekdate: Option<Date<Utc>>,
 
         #[structopt(long = "context", short = "c", default_value = "default")]
         /// The name of the context to use.

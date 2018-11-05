@@ -9,7 +9,8 @@ extern crate serde_json;
 extern crate chrono;
 extern crate time;
 
-use failure::Error;
+use chrono::prelude::*;
+use failure::{Error, ResultExt};
 use std::str::FromStr;
 
 pub mod expensify;
@@ -19,7 +20,7 @@ use types::{TransactionList, TransactionListElement};
 
 pub enum Command {
     Payload(Option<Context>, String, serde_json::Value),
-    PerDiem(Context, Option<chrono::Date<chrono::Utc>>, PerDiem),
+    PerDiem(Context, Option<Date<Utc>>, PerDiem),
 }
 
 #[derive(Serialize, Deserialize)]
@@ -93,19 +94,20 @@ impl FromStr for PerDiem {
 
 const EXPENSIFY_DATE_FORMAT: &str = "%Y-%m-%d";
 
-fn to_date_string(d: &chrono::Date<chrono::Utc>) -> String {
+fn to_date_string(d: &Date<Utc>) -> String {
     d.format(EXPENSIFY_DATE_FORMAT).to_string()
 }
 
-pub fn from_date_string(s: &str) -> Result<chrono::Date<chrono::Utc>, Error> {
-    Ok(format!("{}T00:00:00Z", s)
-        .parse::<chrono::DateTime<chrono::Utc>>()?
+pub fn from_date_string(s: &str) -> Result<Date<Utc>, Error> {
+    let date_string = format!("{}T00:00:00Z", s);
+    Ok(date_string
+        .parse::<DateTime<Utc>>()
+        .with_context(|_| format!("Could not parse date string '{}'", date_string))?
         .date())
 }
 
 impl PerDiem {
     fn into_transactions(self, ctx: &Context) -> Vec<TransactionListElement> {
-        use chrono::prelude::*;
         use time::Duration;
         use PerDiem::*;
 
@@ -127,7 +129,7 @@ impl PerDiem {
                     merchant: String::new(),
                     amount: 0,
                     category: String::new(),
-                    tag: String::new(),
+                    tag: ctx.project.clone(),
                     billable: false,
                     reimbursable: false,
                     comment: format!(
