@@ -6,6 +6,8 @@ extern crate serde;
 extern crate serde_derive;
 #[macro_use]
 extern crate serde_json;
+extern crate chrono;
+extern crate time;
 
 use failure::Error;
 use std::str::FromStr;
@@ -89,12 +91,44 @@ impl FromStr for PerDiem {
     }
 }
 
+fn to_date_string(d: &chrono::Date<chrono::Utc>) -> String {
+    d.format("%Y-%m-%d").to_string()
+}
+
 impl PerDiem {
     fn into_transactions(self, ctx: &Context) -> Vec<TransactionListElement> {
+        use chrono::prelude::*;
+        use time::Duration;
         use PerDiem::*;
-        let ts = Vec::new();
+
+        let mut ts = Vec::new();
         match self {
-            Weekdays => unimplemented!(),
+            Weekdays => {
+                let this_weeks_monday = {
+                    let d = chrono::Utc::today();
+                    d.checked_sub_signed(Duration::days(d.weekday().num_days_from_monday() as i64))
+                        .unwrap()
+                };
+                let this_weeks_friday = this_weeks_monday
+                    .checked_add_signed(Duration::days(5-1))
+                    .unwrap();
+
+                ts.push(TransactionListElement {
+                    created: to_date_string(&this_weeks_monday),
+                    currency: String::new(),
+                    merchant: String::new(),
+                    amount: 0,
+                    category: String::new(),
+                    tag: String::new(),
+                    billable: false,
+                    reimbursable: false,
+                    comment: format!(
+                        "{} to {}",
+                        to_date_string(&this_weeks_monday),
+                        to_date_string(&this_weeks_friday)
+                    ),
+                });
+            }
         }
         ts
     }
