@@ -11,13 +11,16 @@ extern crate time;
 
 use chrono::prelude::*;
 use failure::{Error, ResultExt};
-use std::str::FromStr;
 use time::Duration;
 
 pub mod expensify;
-pub mod types;
+mod perdiem;
+mod types;
 
-use types::{TransactionList, TransactionListElement};
+pub use perdiem::PerDiem;
+use types::TransactionList;
+
+const EXPENSIFY_DATE_FORMAT: &str = "%Y-%m-%d";
 
 pub enum Command {
     Payload(Option<Context>, String, serde_json::Value),
@@ -28,6 +31,24 @@ pub enum Command {
 pub struct UserContext {
     pub project: String,
     pub email: String,
+}
+
+impl UserContext {
+    fn apply_to_value(&self, mut payload: serde_json::Value) -> serde_json::Value {
+        payload
+            .get_mut("employeeEmail")
+            .map(|v| *v = json!(self.email));
+        payload
+            .get_mut("transactionList")
+            .and_then(serde_json::Value::as_array_mut)
+            .map(|a| {
+                for item in a.iter_mut() {
+                    item.get_mut("tag")
+                        .map(|v| *v = json!(self.project.clone()));
+                }
+            });
+        payload
+    }
 }
 
 pub struct Context {
@@ -43,31 +64,6 @@ impl Context {
     }
 }
 
-impl TransactionList {
-    fn from_per_diem(ctx: Context, kind: PerDiem) -> Result<Self, Error> {
-        Ok(TransactionList {
-            transaction_list_type: "expenses".to_owned(),
-            employee_email: ctx.user.email.clone(),
-            transaction_list: kind.into_transactions(&ctx)?,
-        })
-    }
-}
-
-fn apply_context(ctx: UserContext, mut payload: serde_json::Value) -> serde_json::Value {
-    payload
-        .get_mut("employeeEmail")
-        .map(|v| *v = json!(ctx.email));
-    payload
-        .get_mut("transactionList")
-        .and_then(serde_json::Value::as_array_mut)
-        .map(|a| {
-            for item in a.iter_mut() {
-                item.get_mut("tag").map(|v| *v = json!(ctx.project.clone()));
-            }
-        });
-    payload
-}
-
 pub fn execute(
     user_id: String,
     password: String,
@@ -79,7 +75,7 @@ pub fn execute(
     let client = expensify::Client::new(None, user_id, password);
     let (payload_type, payload) = match cmd {
         Payload(None, pt, p) => (pt, p),
-        Payload(Some(ctx), pt, mut p) => (pt, apply_context(ctx.user, p)),
+        Payload(Some(ctx), pt, mut p) => (pt, ctx.user.apply_to_value(p)),
         PerDiem(ctx, kind) => {
             let payload = serde_json::value::to_value(TransactionList::from_per_diem(ctx, kind)?)?;
             ("create".to_string(), payload)
@@ -90,59 +86,10 @@ pub fn execute(
     client.post(&payload_type, payload)
 }
 
-pub enum PerDiem {
-    Weekdays,
-}
-
-impl FromStr for PerDiem {
-    type Err = Error;
-
-    fn from_str(s: &str) -> Result<Self, <Self as FromStr>::Err> {
-        use PerDiem::*;
-        Ok(match s {
-            "weekdays" => Weekdays,
-            _ => bail!("Invalid per diem specification: '{}'", s),
-        })
-    }
-}
-
-const EXPENSIFY_DATE_FORMAT: &str = "%Y-%m-%d";
-
-fn to_date_string(d: &Date<Utc>) -> String {
-    d.format(EXPENSIFY_DATE_FORMAT).to_string()
-}
-
 pub fn from_date_string(s: &str) -> Result<Date<Utc>, Error> {
     let date_string = format!("{}T00:00:00Z", s);
     Ok(date_string
         .parse::<DateTime<Utc>>()
         .with_context(|_| format!("Could not parse date string '{}'", date_string))?
         .date())
-}
-
-impl PerDiem {
-    fn into_transactions(self, ctx: &Context) -> Result<Vec<TransactionListElement>, Error> {
-        use PerDiem::*;
-
-        let mut ts = Vec::new();
-        match self {
-            Weekdays => {
-                let monday = ctx.monday_that_week()?;
-                let friday = monday.checked_add_signed(Duration::days(5 - 1)).unwrap();
-
-                ts.push(TransactionListElement {
-                    created: to_date_string(&monday),
-                    currency: String::new(),
-                    merchant: String::new(),
-                    amount: 0,
-                    category: String::new(),
-                    tag: ctx.user.project.clone(),
-                    billable: false,
-                    reimbursable: false,
-                    comment: format!("{} to {}", to_date_string(&monday), to_date_string(&friday)),
-                });
-            }
-        }
-        Ok(ts)
-    }
 }
