@@ -19,7 +19,7 @@ use types::{TransactionList, TransactionListElement};
 
 pub enum Command {
     Payload(Option<Context>, String, serde_json::Value),
-    PerDiem(Context, PerDiem),
+    PerDiem(Context, Option<chrono::Date<chrono::Utc>>, PerDiem),
 }
 
 #[derive(Serialize, Deserialize)]
@@ -65,7 +65,7 @@ pub fn execute(
     let (payload_type, payload) = match cmd {
         Payload(None, pt, p) => (pt, p),
         Payload(Some(ctx), pt, mut p) => (pt, apply_context(ctx, p)),
-        PerDiem(ctx, kind) => {
+        PerDiem(ctx, _weekdate, kind) => {
             let payload = serde_json::value::to_value(TransactionList::from((ctx, kind)))?;
             ("create".to_string(), payload)
         }
@@ -91,8 +91,16 @@ impl FromStr for PerDiem {
     }
 }
 
+const EXPENSIFY_DATE_FORMAT: &str = "%Y-%m-%d";
+
 fn to_date_string(d: &chrono::Date<chrono::Utc>) -> String {
-    d.format("%Y-%m-%d").to_string()
+    d.format(EXPENSIFY_DATE_FORMAT).to_string()
+}
+
+pub fn from_date_string(s: &str) -> Result<chrono::Date<chrono::Utc>, Error> {
+    Ok(format!("{}T00:00:00Z", s)
+        .parse::<chrono::DateTime<chrono::Utc>>()?
+        .date())
 }
 
 impl PerDiem {
@@ -105,12 +113,12 @@ impl PerDiem {
         match self {
             Weekdays => {
                 let this_weeks_monday = {
-                    let d = chrono::Utc::today();
+                    let d = Utc::today();
                     d.checked_sub_signed(Duration::days(d.weekday().num_days_from_monday() as i64))
                         .unwrap()
                 };
                 let this_weeks_friday = this_weeks_monday
-                    .checked_add_signed(Duration::days(5-1))
+                    .checked_add_signed(Duration::days(5 - 1))
                     .unwrap();
 
                 ts.push(TransactionListElement {

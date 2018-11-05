@@ -1,3 +1,5 @@
+extern crate chrono;
+
 use std::path::PathBuf;
 use structopt::StructOpt;
 
@@ -54,6 +56,15 @@ pub enum PostSubcommands {
     #[structopt(name = "per-diem")]
     /// Post a per-diem, relative to the current week, by default
     PerDiem {
+        #[structopt(
+            parse(try_from_str = "expend::from_date_string"),
+            long = "weekdate",
+            alias = "w"
+        )]
+        /// The date of a day in the week that your per-diem dates should assume, formatted
+        /// like 2018-09-25.
+        weekdate: Option<chrono::Date<chrono::Utc>>,
+
         #[structopt(long = "context", short = "c", default_value = "default")]
         /// The name of the context to use.
         context: String,
