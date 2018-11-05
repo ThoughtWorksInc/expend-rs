@@ -11,50 +11,18 @@ extern crate structopt;
 extern crate termion;
 extern crate username;
 
+mod credentials;
 mod options;
 
 use failure::{bail, format_err, Error, ResultExt};
 use failure_tools::ok_or_exit;
-use keyring::Keyring;
 use options::*;
 use std::path::Path;
 use std::{
-    convert::From,
     fs::{create_dir_all, read_dir, File},
-    io::{stderr, stdin, stdout},
+    io::{stdin, stdout},
     path::PathBuf,
-    str::FromStr,
 };
-use termion::input::TermRead;
-
-#[derive(Serialize, Deserialize)]
-struct Credentials {
-    user_id: String,
-    user_secret: String,
-}
-
-impl From<(String, String)> for Credentials {
-    fn from(f: (String, String)) -> Self {
-        Credentials {
-            user_id: f.0,
-            user_secret: f.1,
-        }
-    }
-}
-
-impl From<Credentials> for (String, String) {
-    fn from(c: Credentials) -> Self {
-        (c.user_id, c.user_secret)
-    }
-}
-
-impl FromStr for Credentials {
-    type Err = Error;
-
-    fn from_str(s: &str) -> Result<Self, <Self as FromStr>::Err> {
-        Ok(serde_json::from_str(s)?)
-    }
-}
 
 pub enum Mode {
     DryRun,
@@ -65,45 +33,6 @@ pub enum Mode {
 fn exit_with(msg: &str) -> ! {
     eprintln!("{}", msg);
     std::process::exit(1)
-}
-
-fn get_or_clear_credentials_from_keychain(clear: bool) -> Result<Option<(String, String)>, Error> {
-    let username = username::get_user_name()?;
-    let keyring = Keyring::new("expend-rs cli", &username);
-    if clear {
-        eprintln!("Clearing previously stored credentials");
-        keyring.delete_password().ok();
-        Ok(None)
-    } else {
-        eprintln!("Trying to use previously saved credentials from keychain.");
-        let credentials: Credentials = match keyring.get_password() {
-            Ok(pw) => pw.parse()?,
-            Err(_) => return Ok(None),
-        };
-        Ok(Some(credentials.into()))
-    }
-}
-
-fn store_credentials_in_keychain(creds: (String, String)) -> Result<(String, String), Error> {
-    let username = username::get_user_name()?;
-    let keyring = Keyring::new("expend-rs cli", &username);
-    let creds: Credentials = creds.into();
-    let creds_str = serde_json::to_string(&creds)?;
-    keyring.set_password(&creds_str)?;
-    Ok(creds.into())
-}
-
-fn query_credentials_from_user() -> Result<(String, String), Error> {
-    eprint!("Please enter your user user-id: ");
-    let mut user_id = String::new();
-    stdin().read_line(&mut user_id)?;
-
-    eprint!("Please enter your user user secret (it won't display): ");
-    let user_secret = stdin()
-        .read_passwd(&mut stderr())?
-        .ok_or_else(|| format_err!("Cannot proceed without a password."))?;
-    eprintln!();
-    Ok((user_id, user_secret))
 }
 
 fn confirm_payload(mode: Mode, type_name: &str, value: &serde_json::Value) -> Result<(), Error> {
@@ -242,17 +171,17 @@ fn run() -> Result<(), Error> {
                 (None, None) => match if post.no_keychain {
                     None
                 } else {
-                    get_or_clear_credentials_from_keychain(post.clear_keychain_entry)?
+                    credentials::from_keychain_or_clear(post.clear_keychain_entry)?
                 } {
                     Some(creds) => creds,
-                    None => query_credentials_from_user().and_then(|creds| {
+                    None => credentials::query_from_user().and_then(|creds| {
                         if post.no_keychain {
                             Ok(creds)
                         } else {
                             eprintln!(
                                 "Storing credentials in keychain - use --no-keychain to disable."
                             );
-                            store_credentials_in_keychain(creds)
+                            credentials::store_in_keychain(creds)
                         }
                     })?,
                 },
