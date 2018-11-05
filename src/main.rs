@@ -107,15 +107,20 @@ fn run() -> Result<(), Error> {
             let context_dir = context::into_directory_path(post.context_from)?;
 
             let cmd = match post.cmd {
-                PostSubcommands::PerDiem { context, kind } => {
+                PostSubcommands::PerDiem {
+                    context,
+                    time_period,
+                    kind,
+                } => {
                     let context =
                         context::from_file_path(&context::file_path(&context_dir, &context))?;
                     let context = expend::Context {
                         user: context,
                         reference_date: post.weekdate,
                     };
-                    let kind: expend::PerDiem = kind.parse()?;
-                    expend::Command::PerDiem(context, kind)
+                    let time_period: expend::perdiem::TimePeriod = time_period.parse()?;
+                    let kind: expend::perdiem::Kind = kind.parse()?;
+                    expend::Command::PerDiem(context, time_period, kind)
                 }
                 PostSubcommands::FromFile {
                     context,

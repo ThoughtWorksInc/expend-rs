@@ -14,17 +14,16 @@ use failure::{Error, ResultExt};
 use time::Duration;
 
 pub mod expensify;
-mod perdiem;
+pub mod perdiem;
 mod types;
 
-pub use perdiem::PerDiem;
 use types::TransactionList;
 
 const EXPENSIFY_DATE_FORMAT: &str = "%Y-%m-%d";
 
 pub enum Command {
     Payload(Option<Context>, String, serde_json::Value),
-    PerDiem(Context, PerDiem),
+    PerDiem(Context, perdiem::TimePeriod, perdiem::Kind),
 }
 
 #[derive(Serialize, Deserialize)]
@@ -76,8 +75,9 @@ pub fn execute(
     let (payload_type, payload) = match cmd {
         Payload(None, pt, p) => (pt, p),
         Payload(Some(ctx), pt, mut p) => (pt, ctx.user.apply_to_value(p)),
-        PerDiem(ctx, kind) => {
-            let payload = serde_json::value::to_value(TransactionList::from_per_diem(ctx, kind)?)?;
+        PerDiem(ctx, period, kind) => {
+            let payload =
+                serde_json::value::to_value(TransactionList::from_per_diem(ctx, period, kind)?)?;
             ("create".to_string(), payload)
         }
     };

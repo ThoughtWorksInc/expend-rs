@@ -1,5 +1,5 @@
-error: 'foobar' isn't a valid value for '<kind>'
-	[possible values: fullday]
+error: 'foobar' isn't a valid value for '<time_period>'
+	[possible values: weekdays]
 
 
 USAGE:

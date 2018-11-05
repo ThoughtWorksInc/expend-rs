@@ -6,27 +6,43 @@ use types::{TransactionList, TransactionListElement};
 use {Context, EXPENSIFY_DATE_FORMAT};
 
 impl TransactionList {
-    pub fn from_per_diem(ctx: Context, kind: PerDiem) -> Result<Self, Error> {
+    pub fn from_per_diem(ctx: Context, period: TimePeriod, kind: Kind) -> Result<Self, Error> {
         Ok(TransactionList {
             transaction_list_type: "expenses".to_owned(),
             employee_email: ctx.user.email.clone(),
-            transaction_list: kind.into_transactions(&ctx)?,
+            transaction_list: period.into_transactions(&ctx, kind)?,
         })
     }
 }
 
-pub enum PerDiem {
+pub enum TimePeriod {
     Weekdays,
 }
 
-impl FromStr for PerDiem {
+pub enum Kind {
+    FullDay,
+}
+
+impl FromStr for TimePeriod {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self, <Self as FromStr>::Err> {
-        use self::PerDiem::*;
+        use self::TimePeriod::*;
         Ok(match s {
             "weekdays" => Weekdays,
-            _ => bail!("Invalid per diem specification: '{}'", s),
+            _ => bail!("Invalid time period specification: '{}'", s),
+        })
+    }
+}
+
+impl FromStr for Kind {
+    type Err = Error;
+
+    fn from_str(s: &str) -> Result<Self, <Self as FromStr>::Err> {
+        use self::Kind::*;
+        Ok(match s {
+            "fullday" => FullDay,
+            _ => bail!("Invalid per diem kind specification: '{}'", s),
         })
     }
 }
@@ -35,9 +51,13 @@ fn to_date_string(d: &Date<Utc>) -> String {
     d.format(EXPENSIFY_DATE_FORMAT).to_string()
 }
 
-impl PerDiem {
-    fn into_transactions(self, ctx: &Context) -> Result<Vec<TransactionListElement>, Error> {
-        use self::PerDiem::*;
+impl TimePeriod {
+    fn into_transactions(
+        self,
+        ctx: &Context,
+        _kind: Kind,
+    ) -> Result<Vec<TransactionListElement>, Error> {
+        use self::TimePeriod::*;
 
         let mut ts = Vec::new();
         match self {

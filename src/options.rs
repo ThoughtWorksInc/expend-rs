@@ -70,9 +70,12 @@ pub enum PostSubcommands {
         /// The name of the context to use.
         context: String,
 
-        /// The kind of per-diem to file. Can be one of the following
-        /// weekdays
-        ///   - Monday to Friday
+        #[structopt(raw(possible_values = r#"&["weekdays"]"#))]
+        /// The kind of per-diem to file.
+        time_period: String,
+
+        #[structopt(raw(possible_values = r#"&["fullday"]"#))]
+        /// The kind of per diem you need.
         kind: String,
     },
     #[structopt(name = "from-file")]
