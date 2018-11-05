@@ -43,13 +43,13 @@ impl Context {
     }
 }
 
-impl From<(Context, PerDiem)> for TransactionList {
-    fn from((ctx, kind): (Context, PerDiem)) -> Self {
-        TransactionList {
+impl TransactionList {
+    fn from_per_diem(ctx: Context, kind: PerDiem) -> Result<Self, Error> {
+        Ok(TransactionList {
             transaction_list_type: "expenses".to_owned(),
             employee_email: ctx.user.email.clone(),
-            transaction_list: kind.into_transactions(&ctx),
-        }
+            transaction_list: kind.into_transactions(&ctx)?,
+        })
     }
 }
 
@@ -81,7 +81,7 @@ pub fn execute(
         Payload(None, pt, p) => (pt, p),
         Payload(Some(ctx), pt, mut p) => (pt, apply_context(ctx.user, p)),
         PerDiem(ctx, kind) => {
-            let payload = serde_json::value::to_value(TransactionList::from((ctx, kind)))?;
+            let payload = serde_json::value::to_value(TransactionList::from_per_diem(ctx, kind)?)?;
             ("create".to_string(), payload)
         }
     };
@@ -121,13 +121,13 @@ pub fn from_date_string(s: &str) -> Result<Date<Utc>, Error> {
 }
 
 impl PerDiem {
-    fn into_transactions(self, ctx: &Context) -> Vec<TransactionListElement> {
+    fn into_transactions(self, ctx: &Context) -> Result<Vec<TransactionListElement>, Error> {
         use PerDiem::*;
 
         let mut ts = Vec::new();
         match self {
             Weekdays => {
-                let monday = ctx.monday_that_week().unwrap();
+                let monday = ctx.monday_that_week()?;
                 let friday = monday.checked_add_signed(Duration::days(5 - 1)).unwrap();
 
                 ts.push(TransactionListElement {
@@ -143,6 +143,6 @@ impl PerDiem {
                 });
             }
         }
-        ts
+        Ok(ts)
     }
 }
