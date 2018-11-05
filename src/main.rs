@@ -107,10 +107,11 @@ fn run() -> Result<(), Error> {
             let context_dir = context::into_directory_path(post.context_from)?;
 
             let cmd = match post.cmd {
-                PostSubcommands::PerDiem { context, kind: _ } => {
-                    let _context =
+                PostSubcommands::PerDiem { context, kind } => {
+                    let context =
                         context::from_file_path(&context::file_path(&context_dir, &context))?;
-                    unimplemented!()
+                    let kind: expend::PerDiem = kind.parse()?;
+                    expend::Command::PerDiem(context, kind)
                 }
                 PostSubcommands::FromFile {
                     context,

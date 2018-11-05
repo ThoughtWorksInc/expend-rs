@@ -8,11 +8,13 @@ extern crate serde_derive;
 extern crate serde_json;
 
 use failure::Error;
+use std::str::FromStr;
 
 pub mod expensify;
 
 pub enum Command {
     Payload(Option<Context>, String, serde_json::Value),
+    PerDiem(Context, PerDiem),
 }
 
 #[derive(Serialize, Deserialize)]
@@ -48,7 +50,24 @@ pub fn execute(
     let (payload_type, payload) = match cmd {
         Payload(None, pt, p) => (pt, p),
         Payload(Some(ctx), pt, mut p) => (pt, apply_context(ctx, p)),
+        PerDiem(_ctx, _kind) => unimplemented!(),
     };
     pre_execute(&payload_type, &payload)?;
     client.post(&payload_type, payload)
+}
+
+pub enum PerDiem {
+    Weekdays,
+}
+
+impl FromStr for PerDiem {
+    type Err = Error;
+
+    fn from_str(s: &str) -> Result<Self, <Self as FromStr>::Err> {
+        use PerDiem::*;
+        Ok(match s {
+            "weekdays" => Weekdays,
+            _ => bail!("Invalid per diem specification: '{}'", s),
+        })
+    }
 }
