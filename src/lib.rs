@@ -19,27 +19,32 @@ pub mod types;
 use types::{TransactionList, TransactionListElement};
 
 pub enum Command {
-    Payload(Option<Context>, String, serde_json::Value),
-    PerDiem(Context, Option<Date<Utc>>, PerDiem),
+    Payload(Option<UserContext>, String, serde_json::Value),
+    PerDiem(SuperContext, PerDiem),
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct Context {
+pub struct UserContext {
     pub project: String,
     pub email: String,
 }
 
-impl From<(Context, PerDiem)> for TransactionList {
-    fn from((ctx, kind): (Context, PerDiem)) -> Self {
+pub struct SuperContext {
+    pub user: UserContext,
+    pub reference_date: Option<Date<Utc>>,
+}
+
+impl From<(SuperContext, PerDiem)> for TransactionList {
+    fn from((ctx, kind): (SuperContext, PerDiem)) -> Self {
         TransactionList {
             transaction_list_type: "expenses".to_owned(),
-            employee_email: ctx.email.clone(),
+            employee_email: ctx.user.email.clone(),
             transaction_list: kind.into_transactions(&ctx),
         }
     }
 }
 
-fn apply_context(ctx: Context, mut payload: serde_json::Value) -> serde_json::Value {
+fn apply_context(ctx: UserContext, mut payload: serde_json::Value) -> serde_json::Value {
     payload
         .get_mut("employeeEmail")
         .map(|v| *v = json!(ctx.email));
@@ -66,7 +71,7 @@ pub fn execute(
     let (payload_type, payload) = match cmd {
         Payload(None, pt, p) => (pt, p),
         Payload(Some(ctx), pt, mut p) => (pt, apply_context(ctx, p)),
-        PerDiem(ctx, _weekdate, kind) => {
+        PerDiem(ctx, kind) => {
             let payload = serde_json::value::to_value(TransactionList::from((ctx, kind)))?;
             ("create".to_string(), payload)
         }
@@ -107,7 +112,7 @@ pub fn from_date_string(s: &str) -> Result<Date<Utc>, Error> {
 }
 
 impl PerDiem {
-    fn into_transactions(self, ctx: &Context) -> Vec<TransactionListElement> {
+    fn into_transactions(self, ctx: &SuperContext) -> Vec<TransactionListElement> {
         use time::Duration;
         use PerDiem::*;
 
@@ -115,7 +120,7 @@ impl PerDiem {
         match self {
             Weekdays => {
                 let this_weeks_monday = {
-                    let d = Utc::today();
+                    let d = ctx.reference_date.unwrap_or_else(Utc::today);
                     d.checked_sub_signed(Duration::days(d.weekday().num_days_from_monday() as i64))
                         .unwrap()
                 };
@@ -129,7 +134,7 @@ impl PerDiem {
                     merchant: String::new(),
                     amount: 0,
                     category: String::new(),
-                    tag: ctx.project.clone(),
+                    tag: ctx.user.project.clone(),
                     billable: false,
                     reimbursable: false,
                     comment: format!(

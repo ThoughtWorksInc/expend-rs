@@ -114,8 +114,12 @@ fn run() -> Result<(), Error> {
                 } => {
                     let context =
                         context::from_file_path(&context::file_path(&context_dir, &context))?;
+                    let context = expend::SuperContext {
+                        user: context,
+                        reference_date: weekdate,
+                    };
                     let kind: expend::PerDiem = kind.parse()?;
-                    expend::Command::PerDiem(context, weekdate, kind)
+                    expend::Command::PerDiem(context, kind)
                 }
                 PostSubcommands::FromFile {
                     context,
@@ -123,7 +127,7 @@ fn run() -> Result<(), Error> {
                     input,
                 } => {
                     let context = context.map(|c| context::file_path(&context_dir, &c));
-                    let context: Option<expend::Context> = match context {
+                    let context: Option<expend::UserContext> = match context {
                         Some(file) => Some(context::from_file_path(&file)?),
                         None => None,
                     };

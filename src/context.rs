@@ -42,7 +42,7 @@ pub fn handle(from: Option<PathBuf>, cmd: ContextSubcommand) -> Result<(), Error
 
             let context_file = file_path(&config_dir, &name);
 
-            let context = expend::Context { project, email };
+            let context = expend::UserContext { project, email };
             serde_json::to_writer_pretty(
                 File::create(&context_file).with_context(|_| {
                     format!("Failed to open file at '{}'", context_file.display())
@@ -80,7 +80,7 @@ fn path_to_context_name(file: &Path) -> Option<String> {
     file.file_stem().map(|s| s.to_string_lossy().into_owned())
 }
 
-pub fn from_file_path(file: &Path) -> Result<expend::Context, Error> {
+pub fn from_file_path(file: &Path) -> Result<expend::UserContext, Error> {
     Ok(serde_json::from_reader(File::open(&file).with_context(
         |_| {
             format!(
