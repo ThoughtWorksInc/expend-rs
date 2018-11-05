@@ -12,6 +12,7 @@ extern crate time;
 use chrono::prelude::*;
 use failure::{Error, ResultExt};
 use std::str::FromStr;
+use time::Duration;
 
 pub mod expensify;
 pub mod types;
@@ -19,8 +20,8 @@ pub mod types;
 use types::{TransactionList, TransactionListElement};
 
 pub enum Command {
-    Payload(Option<UserContext>, String, serde_json::Value),
-    PerDiem(SuperContext, PerDiem),
+    Payload(Option<Context>, String, serde_json::Value),
+    PerDiem(Context, PerDiem),
 }
 
 #[derive(Serialize, Deserialize)]
@@ -29,13 +30,21 @@ pub struct UserContext {
     pub email: String,
 }
 
-pub struct SuperContext {
+pub struct Context {
     pub user: UserContext,
     pub reference_date: Option<Date<Utc>>,
 }
 
-impl From<(SuperContext, PerDiem)> for TransactionList {
-    fn from((ctx, kind): (SuperContext, PerDiem)) -> Self {
+impl Context {
+    pub fn monday_that_week(&self) -> Result<Date<Utc>, Error> {
+        let d = self.reference_date.unwrap_or_else(Utc::today);
+        d.checked_sub_signed(Duration::days(d.weekday().num_days_from_monday() as i64))
+            .ok_or_else(|| format_err!("Failed to compute Monday from the given date."))
+    }
+}
+
+impl From<(Context, PerDiem)> for TransactionList {
+    fn from((ctx, kind): (Context, PerDiem)) -> Self {
         TransactionList {
             transaction_list_type: "expenses".to_owned(),
             employee_email: ctx.user.email.clone(),
@@ -70,7 +79,7 @@ pub fn execute(
     let client = expensify::Client::new(None, user_id, password);
     let (payload_type, payload) = match cmd {
         Payload(None, pt, p) => (pt, p),
-        Payload(Some(ctx), pt, mut p) => (pt, apply_context(ctx, p)),
+        Payload(Some(ctx), pt, mut p) => (pt, apply_context(ctx.user, p)),
         PerDiem(ctx, kind) => {
             let payload = serde_json::value::to_value(TransactionList::from((ctx, kind)))?;
             ("create".to_string(), payload)
@@ -112,24 +121,17 @@ pub fn from_date_string(s: &str) -> Result<Date<Utc>, Error> {
 }
 
 impl PerDiem {
-    fn into_transactions(self, ctx: &SuperContext) -> Vec<TransactionListElement> {
-        use time::Duration;
+    fn into_transactions(self, ctx: &Context) -> Vec<TransactionListElement> {
         use PerDiem::*;
 
         let mut ts = Vec::new();
         match self {
             Weekdays => {
-                let this_weeks_monday = {
-                    let d = ctx.reference_date.unwrap_or_else(Utc::today);
-                    d.checked_sub_signed(Duration::days(d.weekday().num_days_from_monday() as i64))
-                        .unwrap()
-                };
-                let this_weeks_friday = this_weeks_monday
-                    .checked_add_signed(Duration::days(5 - 1))
-                    .unwrap();
+                let monday = ctx.monday_that_week().unwrap();
+                let friday = monday.checked_add_signed(Duration::days(5 - 1)).unwrap();
 
                 ts.push(TransactionListElement {
-                    created: to_date_string(&this_weeks_monday),
+                    created: to_date_string(&monday),
                     currency: String::new(),
                     merchant: String::new(),
                     amount: 0,
@@ -137,11 +139,7 @@ impl PerDiem {
                     tag: ctx.user.project.clone(),
                     billable: false,
                     reimbursable: false,
-                    comment: format!(
-                        "{} to {}",
-                        to_date_string(&this_weeks_monday),
-                        to_date_string(&this_weeks_friday)
-                    ),
+                    comment: format!("{} to {}", to_date_string(&monday), to_date_string(&friday)),
                 });
             }
         }

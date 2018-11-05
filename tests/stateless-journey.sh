@@ -83,6 +83,7 @@ WITH_FAILURE=1
           }
         )
         (with "a default context available (and the time set to a known date)"
+          WEEKDATE=(--weekdate 1972-09-02)
           step "(setting the context)"
           expect_run ${SUCCESSFULLY} "$exe" context --at . set --email me@example.com --project 'project code'
 
@@ -96,7 +97,7 @@ WITH_FAILURE=1
           (when "using the 'weekdays' kind"
             it "succeeds and creates a properly formatted payload" && {
               WITH_SNAPSHOT="$snapshot/success-create-per-diem-weekdays" \
-              expect_run ${WITH_FAILURE} "$exe" post --context-dir . $DRY "${CREDS[@]}" per-diem --weekdate 1972-09-02 weekdays
+              expect_run ${WITH_FAILURE} "$exe" post --context-dir . $DRY "${CREDS[@]}" "${WEEKDATE[@]}" per-diem weekdays
             }
           )
         )

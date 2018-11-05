@@ -107,16 +107,12 @@ fn run() -> Result<(), Error> {
             let context_dir = context::into_directory_path(post.context_from)?;
 
             let cmd = match post.cmd {
-                PostSubcommands::PerDiem {
-                    weekdate,
-                    context,
-                    kind,
-                } => {
+                PostSubcommands::PerDiem { context, kind } => {
                     let context =
                         context::from_file_path(&context::file_path(&context_dir, &context))?;
-                    let context = expend::SuperContext {
+                    let context = expend::Context {
                         user: context,
-                        reference_date: weekdate,
+                        reference_date: post.weekdate,
                     };
                     let kind: expend::PerDiem = kind.parse()?;
                     expend::Command::PerDiem(context, kind)
@@ -127,11 +123,13 @@ fn run() -> Result<(), Error> {
                     input,
                 } => {
                     let context = context.map(|c| context::file_path(&context_dir, &c));
-                    let context: Option<expend::UserContext> = match context {
+                    let context = match context {
                         Some(file) => Some(context::from_file_path(&file)?),
                         None => None,
-                    };
-
+                    }.map(|ctx| expend::Context {
+                        user: ctx,
+                        reference_date: None,
+                    });
                     let json_value: serde_json::Value =
                         serde_yaml::from_reader(std::fs::File::open(&input).with_context(
                             |_| format!("Failed to open file at '{}'", input.display()),

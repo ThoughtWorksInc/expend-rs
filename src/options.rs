@@ -48,6 +48,15 @@ pub struct Post {
     /// Defaults to your <OS config dir>/expend-rs
     pub context_from: Option<PathBuf>,
 
+    #[structopt(
+        parse(try_from_str = "expend::from_date_string"),
+        long = "weekdate",
+        alias = "w"
+    )]
+    /// The date of a day in the week that your per-diem dates should assume, formatted
+    /// like 2018-09-25.
+    pub weekdate: Option<Date<Utc>>,
+
     #[structopt(subcommand)]
     pub cmd: PostSubcommands,
 }
@@ -57,15 +66,6 @@ pub enum PostSubcommands {
     #[structopt(name = "per-diem")]
     /// Post a per-diem, relative to the current week, by default
     PerDiem {
-        #[structopt(
-            parse(try_from_str = "expend::from_date_string"),
-            long = "weekdate",
-            alias = "w"
-        )]
-        /// The date of a day in the week that your per-diem dates should assume, formatted
-        /// like 2018-09-25.
-        weekdate: Option<Date<Utc>>,
-
         #[structopt(long = "context", short = "c", default_value = "default")]
         /// The name of the context to use.
         context: String,
@@ -76,7 +76,7 @@ pub enum PostSubcommands {
         kind: String,
     },
     #[structopt(name = "from-file")]
-    /// Load a file with structured data and use it as payload
+    /// Load a file with structured data and use it as payload.
     FromFile {
         #[structopt(long = "context", short = "c")]
         /// The name of the context to use. If unset, the context values have to be provided by the user.
