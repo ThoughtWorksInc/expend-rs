@@ -22,7 +22,7 @@ time = "0.1.40"
 
 [[bin]]
 name="expend"
-path="src/main.rs"
+path="src/cli/main.rs"
 
 [profile.release]
 panic = 'unwind'
