@@ -26,6 +26,51 @@ pub enum Command {
     PerDiem(Context, perdiem::TimePeriod, perdiem::Kind),
 }
 
+pub enum Country {
+    Germany,
+}
+
+pub enum Currency {
+    EUR,
+}
+
+impl std::fmt::Display for Country {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
+        use self::Country::*;
+        match self {
+            Germany => f.write_str("Germany"),
+        }
+    }
+}
+
+impl std::fmt::Display for Currency {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
+        use self::Currency::*;
+        match self {
+            EUR => f.write_str("EUR"),
+        }
+    }
+}
+
+impl Currency {
+    fn symbol(&self) -> &'static str {
+        use self::Currency::*;
+        match self {
+            EUR => "€",
+        }
+    }
+}
+
+impl Country {
+    fn currency(&self) -> Currency {
+        use self::Country::*;
+        use self::Currency::*;
+        match self {
+            Germany => EUR,
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize)]
 pub struct UserContext {
     pub project: String,

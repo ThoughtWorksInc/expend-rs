@@ -23,6 +23,15 @@ pub enum Kind {
     FullDay,
 }
 
+impl Kind {
+    fn amount(&self, c: &::Country) -> u32 {
+        use Country::*;
+        (match c {
+            Germany => 24,
+        }) * 100
+    }
+}
+
 impl FromStr for TimePeriod {
     type Err = Error;
 
@@ -55,7 +64,7 @@ impl TimePeriod {
     fn into_transactions(
         self,
         ctx: &Context,
-        _kind: Kind,
+        kind: Kind,
     ) -> Result<Vec<TransactionListElement>, Error> {
         use self::TimePeriod::*;
 
@@ -64,12 +73,20 @@ impl TimePeriod {
             Weekdays => {
                 let monday = ctx.monday_of_reference_date()?;
                 let friday = monday.checked_add_signed(Duration::days(5 - 1)).unwrap();
+                let num_days = 5;
+                let country = ::Country::Germany;
 
                 ts.push(TransactionListElement {
                     created: to_date_string(&monday),
-                    currency: String::new(),
-                    merchant: String::new(),
-                    amount: 0,
+                    currency: format!("{}", country.currency()),
+                    merchant: format!(
+                        "{} * {} Full Day @ {}{:.2}",
+                        num_days,
+                        country,
+                        country.currency().symbol(),
+                        (kind.amount(&country) / 100) as f32
+                    ),
+                    amount: (kind.amount(&country) * num_days) as i64,
                     category: String::new(),
                     tag: ctx.user.project.clone(),
                     billable: false,

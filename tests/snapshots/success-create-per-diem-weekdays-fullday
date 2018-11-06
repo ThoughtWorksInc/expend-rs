@@ -2,13 +2,13 @@ The following 'create' payload would be sent to Expensify:
 ---
 employeeEmail: me@example.com
 transactionList:
-  - amount: 0
+  - amount: 12000
     billable: false
     category: ""
     comment: 1972-08-28 to 1972-09-01
     created: 1972-08-28
-    currency: "EUR"
-    merchant: ""
+    currency: EUR
+    merchant: 5 * Germany Full Day @ €24.00
     reimbursable: false
     tag: project code
 type: expenses
