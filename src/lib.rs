@@ -15,9 +15,8 @@ use time::Duration;
 
 pub mod expensify;
 pub mod perdiem;
-mod types;
 
-use types::TransactionList;
+use expensify::TransactionList;
 
 const EXPENSIFY_DATE_FORMAT: &str = "%Y-%m-%d";
 

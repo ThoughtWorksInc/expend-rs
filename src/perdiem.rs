@@ -1,8 +1,8 @@
 use chrono::{Date, Utc};
+use expensify::{TransactionList, TransactionListElement};
 use failure::Error;
 use std::str::FromStr;
 use time::Duration;
-use types::{TransactionList, TransactionListElement};
 use {Context, EXPENSIFY_DATE_FORMAT};
 
 impl TransactionList {
