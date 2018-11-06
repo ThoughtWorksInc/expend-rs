@@ -1,4 +1,6 @@
 use chrono::{Date, Utc};
+use context::Country;
+use context::Country::*;
 use expensify::{TransactionList, TransactionListElement};
 use failure::Error;
 use std::str::FromStr;
@@ -24,8 +26,7 @@ pub enum Kind {
 }
 
 impl Kind {
-    fn amount(&self, c: &::Country) -> u32 {
-        use Country::*;
+    fn amount(&self, c: &Country) -> u32 {
         (match c {
             Germany => 24,
         }) * 100
@@ -74,7 +75,7 @@ impl TimePeriod {
                 let monday = ctx.monday_of_reference_date()?;
                 let friday = monday.checked_add_signed(Duration::days(5 - 1)).unwrap();
                 let num_days = 5;
-                let country = ::Country::Germany;
+                let country = Germany;
 
                 ts.push(TransactionListElement {
                     created: to_date_string(&monday),
