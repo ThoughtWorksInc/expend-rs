@@ -109,6 +109,14 @@ WITH_FAILURE=1
               }
             )
           )
+          (when "using the flexible 'range from-to' period"
+            (when "using the 'fullday' kind"
+              it "succeeds and creates a properly formatted payload" && {
+                WITH_SNAPSHOT="$snapshot/success-create-per-diem-range-fullday" \
+                expect_run ${WITH_FAILURE} "$exe" post --context-dir . $DRY "${CREDS[@]}" "${WEEKDATE[@]}" per-diem mon-sun fullday
+              }
+            )
+          )
         )
       )
     )
