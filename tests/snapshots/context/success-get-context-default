@@ -1,3 +1,8 @@
 ---
 project: the project name sans sub-project
 email: you@example.com
+country: Germany
+tags:
+  travel:
+    name: Travel
+    billable: true

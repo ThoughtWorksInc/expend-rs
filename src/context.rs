@@ -2,12 +2,28 @@ use chrono::prelude::*;
 use failure::Error;
 use time::Duration;
 
+#[derive(Serialize, Deserialize)]
 pub enum Country {
     Germany,
 }
 
 pub enum Currency {
     EUR,
+}
+
+impl std::str::FromStr for Country {
+    type Err = Error;
+
+    fn from_str(s: &str) -> Result<Self, <Self as std::str::FromStr>::Err> {
+        use self::Country::*;
+        match s {
+            "germany" | "Germany" => Ok(Germany),
+            _ => bail!(
+                "Invalid country identifier: '{}'. Country is not implemented.",
+                s
+            ),
+        }
+    }
 }
 
 impl std::fmt::Display for Country {
@@ -51,6 +67,19 @@ impl Country {
 pub struct UserContext {
     pub project: String,
     pub email: String,
+    pub country: Country,
+    pub tags: Tags,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct Tags {
+    pub travel: Tag,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct Tag {
+    pub name: String,
+    pub billable: bool,
 }
 
 impl UserContext {

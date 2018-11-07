@@ -118,6 +118,11 @@ pub enum ContextSubcommand {
         /// The name of the context.
         name: String,
 
+        #[structopt(long = "country", short = "c", default_value = "Germany")]
+        #[structopt(raw(possible_values = r#"&["Germany"]"#))]
+        /// The name of the country you are in. It's used to identify your currency and currency symbol.
+        country: String,
+
         #[structopt(long = "project", short = "p")]
         /// The project identifier. It's exactly what you see when selecting the project in Expensify
         project: String,
@@ -125,6 +130,14 @@ pub enum ContextSubcommand {
         #[structopt(long = "email", short = "e")]
         /// The email address used to login to expensify.
         email: String,
+
+        #[structopt(long = "travel-tag-name", default_value = "Travel")]
+        /// The name of the tag to use for travel related expenses.
+        travel_tag_name: String,
+
+        #[structopt(long = "travel-tag-unbillable")]
+        /// If set, all travel expenses will be unbillable.
+        travel_unbillable: bool,
     },
 
     #[structopt(name = "get")]

@@ -149,6 +149,20 @@ WITH_FAILURE=1
           expect_run ${SUCCESSFULLY} "$exe" contexts "${context_dir[@]}" get
         }
       )
+      (when 'setting another named context with all optional flags set'
+        it 'succeeds' && {
+          expect_run ${SUCCESSFULLY} "$exe" contexts "${context_dir[@]}" set \
+              --name other-client \
+              --project 'some other project name' \
+              --email me@example.com \
+              --country Germany \
+              --travel-tag-name Travel \
+              --travel-tag-unbillable
+        }
+        it 'writes the expected file' && {
+          expect_snapshot "$snapshot/context-dir-multiple-contexts" .
+        }
+      )
     )
   )
 )

@@ -21,6 +21,7 @@ pub fn file_path(directory: &Path, name: &str) -> PathBuf {
 }
 
 pub fn handle(from: Option<PathBuf>, cmd: ContextSubcommand) -> Result<(), Error> {
+    use expend::{Tag, Tags, UserContext};
     let config_dir = into_directory_path(from)?;
     Ok(match cmd {
         ContextSubcommand::Get { name } => {
@@ -31,6 +32,9 @@ pub fn handle(from: Option<PathBuf>, cmd: ContextSubcommand) -> Result<(), Error
             name,
             project,
             email,
+            country,
+            travel_tag_name,
+            travel_unbillable,
         } => {
             let config_dir = config_dir;
             create_dir_all(&config_dir).with_context(|_| {
@@ -42,7 +46,17 @@ pub fn handle(from: Option<PathBuf>, cmd: ContextSubcommand) -> Result<(), Error
 
             let context_file = file_path(&config_dir, &name);
 
-            let context = expend::UserContext { project, email };
+            let context = UserContext {
+                project,
+                email,
+                country: country.parse()?,
+                tags: Tags {
+                    travel: Tag {
+                        name: travel_tag_name,
+                        billable: !travel_unbillable,
+                    },
+                },
+            };
             serde_json::to_writer_pretty(
                 File::create(&context_file).with_context(|_| {
                     format!("Failed to open file at '{}'", context_file.display())

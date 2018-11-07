@@ -1,0 +1,11 @@
+{
+  "project": "some other project name",
+  "email": "me@example.com",
+  "country": "Germany",
+  "tags": {
+    "travel": {
+      "name": "Travel",
+      "billable": false
+    }
+  }
+}

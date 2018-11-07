@@ -20,7 +20,7 @@ use expensify::TransactionList;
 
 const EXPENSIFY_DATE_FORMAT: &str = "%Y-%m-%d";
 
-pub use context::{Context, UserContext};
+pub use context::{Context, Tag, Tags, UserContext};
 
 pub enum Command {
     Payload(Option<Context>, String, serde_json::Value),
