@@ -27,6 +27,7 @@ pub fn handle(from: Option<PathBuf>, cmd: ContextSubcommand) -> Result<(), Error
         ContextSubcommand::Get { name } => {
             let ctx = from_file_path(&file_path(&config_dir, &name))?;
             serde_yaml::to_writer(stdout(), &ctx)?;
+            println!();
         }
         ContextSubcommand::Set {
             name,

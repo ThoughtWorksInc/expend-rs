@@ -7,6 +7,12 @@ pub enum Country {
     Germany,
 }
 
+impl Default for Country {
+    fn default() -> Self {
+        Country::Germany
+    }
+}
+
 pub enum Currency {
     EUR,
 }
@@ -67,13 +73,26 @@ impl Country {
 pub struct UserContext {
     pub project: String,
     pub email: String,
+    #[serde(default)]
     pub country: Country,
+    #[serde(default)]
     pub tags: Tags,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct Tags {
     pub travel: Tag,
+}
+
+impl Default for Tags {
+    fn default() -> Self {
+        Tags {
+            travel: Tag {
+                name: "Travel".to_string(),
+                billable: true,
+            },
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize)]
