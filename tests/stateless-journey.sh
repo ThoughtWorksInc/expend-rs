@@ -162,6 +162,10 @@ WITH_FAILURE=1
         it 'writes the expected file' && {
           expect_snapshot "$snapshot/context-dir-multiple-contexts" .
         }
+        it 'lists all now available contexts' && {
+          WITH_SNAPSHOT="$snapshot/success-list-contexts-multiple" \
+          expect_run ${SUCCESSFULLY} "$exe" contexts "${context_dir[@]}" list
+        }
       )
     )
   )

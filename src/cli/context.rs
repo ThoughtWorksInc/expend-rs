@@ -103,5 +103,5 @@ pub fn from_file_path(file: &Path) -> Result<expend::UserContext, Error> {
                 path_to_context_name(file).unwrap_or_else(|| "default".to_owned())
             )
         },
-    )?)?)
+    )?).with_context(|_| format!("Could not deserialize context file at '{}'. You can try to recreate it with 'context set'.", file.display()))?)
 }
