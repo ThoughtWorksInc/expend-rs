@@ -3,7 +3,7 @@ use context::Country;
 use context::Country::*;
 use expensify::{TransactionList, TransactionListElement};
 use failure::Error;
-use std::str::FromStr;
+use std::{fmt, str::FromStr};
 use time::Duration;
 use {Context, EXPENSIFY_DATE_FORMAT};
 
@@ -17,8 +17,105 @@ impl TransactionList {
     }
 }
 
+#[derive(Debug, PartialEq, Eq)]
+pub enum Weekday {
+    Monday,
+    Tuesday,
+    Wednesday,
+    Thursday,
+    Friday,
+    Saturday,
+    Sunday,
+}
+
+#[derive(Debug, PartialEq, Eq)]
 pub enum TimePeriod {
     Weekdays,
+    SingleDay(Weekday),
+    DayRange { from: Weekday, to: Weekday },
+}
+
+impl FromStr for Weekday {
+    type Err = Error;
+
+    fn from_str(s: &str) -> Result<Self, <Self as FromStr>::Err> {
+        use self::Weekday::*;
+        Ok(match s.to_ascii_lowercase().as_str() {
+            "mon" | "monday" => Monday,
+            "tue" | "tuesday" => Tuesday,
+            "wed" | "wednesday" => Wednesday,
+            "thu" | "thursday" => Thursday,
+            "fri" | "friday" => Friday,
+            "sat" | "saturday" => Saturday,
+            "sun" | "sunday" => Sunday,
+            _ => bail!("Invalid weekday specification: '{}'", s),
+        })
+    }
+}
+
+impl Weekday {
+    fn is_after(&self, other: &Weekday) -> bool {
+        self.numerical() > other.numerical()
+    }
+
+    fn numerical(&self) -> u8 {
+        use self::Weekday::*;
+        match self {
+            Monday => 0,
+            Tuesday => 1,
+            Wednesday => 2,
+            Thursday => 3,
+            Friday => 4,
+            Saturday => 5,
+            Sunday => 6,
+        }
+    }
+}
+
+impl fmt::Display for Weekday {
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+        use self::Weekday::*;
+        match self {
+            Monday => f.write_str("Monday"),
+            Tuesday => f.write_str("Tuesday"),
+            Wednesday => f.write_str("Wednesday"),
+            Thursday => f.write_str("Thursday"),
+            Friday => f.write_str("Friday"),
+            Saturday => f.write_str("Saturday"),
+            Sunday => f.write_str("Sunday"),
+        }
+    }
+}
+
+impl FromStr for TimePeriod {
+    type Err = Error;
+
+    fn from_str(s: &str) -> Result<Self, <Self as FromStr>::Err> {
+        use self::TimePeriod::*;
+        let mut words = s.split('-');
+
+        Ok(match (words.next(), words.next(), words.next()) {
+            (Some(first), None, None) => match first {
+                "weekdays" => Weekdays,
+                s => SingleDay(s.parse()?),
+            },
+            (Some(first), Some(second), None) => {
+                let from = first.parse()?;
+                let to = second.parse()?;
+                if from == to {
+                    SingleDay(from)
+                } else if from.is_after(&to) {
+                    bail!("Day '{}' must be temporally before '{}', but came after. Write '{}-{}' instead.", from, to, to, from)
+                } else {
+                    DayRange { from, to }
+                }
+            }
+            _ => bail!(
+                "More than two days separated by '-' are not allowed in '{}'",
+                s
+            ),
+        })
+    }
 }
 
 pub enum Kind {
@@ -30,18 +127,6 @@ impl Kind {
         (match c {
             Germany => 24,
         }) * 100
-    }
-}
-
-impl FromStr for TimePeriod {
-    type Err = Error;
-
-    fn from_str(s: &str) -> Result<Self, <Self as FromStr>::Err> {
-        use self::TimePeriod::*;
-        Ok(match s {
-            "weekdays" => Weekdays,
-            _ => bail!("Invalid time period specification: '{}'", s),
-        })
     }
 }
 
@@ -94,6 +179,8 @@ impl TimePeriod {
                     comment: format!("{} to {}", to_date_string(&monday), to_date_string(&friday)),
                 });
             }
+            SingleDay(_day) => unimplemented!("Single-Day"),
+            DayRange { from: _, to: _ } => unimplemented!("day range"),
         }
         Ok(ts)
     }

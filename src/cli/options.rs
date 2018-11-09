@@ -48,11 +48,7 @@ pub struct Post {
     /// Defaults to your <OS config dir>/expend-rs
     pub context_from: Option<PathBuf>,
 
-    #[structopt(
-        parse(try_from_str = "expend::from_date_string"),
-        long = "weekdate",
-        alias = "w"
-    )]
+    #[structopt(parse(try_from_str = "expend::from_date_string"), long = "weekdate", alias = "w")]
     /// The date of a day in the week that your per-diem dates should assume, formatted
     /// like 2018-09-25.
     pub weekdate: Option<Date<Utc>>,
@@ -70,8 +66,12 @@ pub enum PostSubcommands {
         /// The name of the context to use.
         context: String,
 
-        #[structopt(raw(possible_values = r#"&["weekdays"]"#))]
         /// The kind of per-diem to file.
+        /// Valid values are:
+        /// weekdays
+        ///     - Equivalent to Monday-Friday
+        /// Mon OR Monday OR Tue OR Tuesday ... Sun OR Sunday
+        ///     - the given singular day, either as shorthand or full identifier. Case-insensitive.
         time_period: String,
 
         #[structopt(raw(possible_values = r#"&["fullday"]"#))]

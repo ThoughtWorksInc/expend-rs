@@ -1,9 +1,6 @@
 use failure::{format_err, Error};
 use keyring::Keyring;
-use std::{
-    io::{stderr, stdin},
-    str::FromStr,
-};
+use std::{io::{stderr, stdin}, str::FromStr};
 use termion::input::TermRead;
 
 #[derive(Serialize, Deserialize)]

@@ -1,10 +1,6 @@
 use failure::{bail, format_err, Error, ResultExt};
 use options::ContextSubcommand;
-use std::{
-    fs::{create_dir_all, read_dir, File},
-    io::stdout,
-    path::{Path, PathBuf},
-};
+use std::{fs::{create_dir_all, read_dir, File}, io::stdout, path::{Path, PathBuf}};
 
 pub fn into_directory_path(directory: Option<PathBuf>) -> Result<PathBuf, Error> {
     directory
@@ -13,7 +9,8 @@ pub fn into_directory_path(directory: Option<PathBuf>) -> Result<PathBuf, Error>
                 d.push("expend-rs");
                 d
             })
-        }).ok_or_else(|| format_err!("Could not find configuration directory"))
+        })
+        .ok_or_else(|| format_err!("Could not find configuration directory"))
 }
 
 pub fn file_path(directory: &Path, name: &str) -> PathBuf {
@@ -79,7 +76,8 @@ pub fn handle(from: Option<PathBuf>, cmd: ContextSubcommand) -> Result<(), Error
                 .filter_map(|p: PathBuf| match p.extension() {
                     Some(ext) if ext == "json" => Some(p.clone()),
                     _ => None,
-                }).filter_map(|p| path_to_context_name(&p))
+                })
+                .filter_map(|p| path_to_context_name(&p))
             {
                 println!("{}", stem);
                 count += 1;
@@ -96,13 +94,13 @@ fn path_to_context_name(file: &Path) -> Option<String> {
 }
 
 pub fn from_file_path(file: &Path) -> Result<expend::UserContext, Error> {
-    Ok(serde_json::from_reader(File::open(&file).with_context(
-        |_| {
-            format!(
-                "Could not read context file at '{}'. Use 'context set \"{}\"' to create one.",
-                file.display(),
-                path_to_context_name(file).unwrap_or_else(|| "default".to_owned())
-            )
-        },
-    )?).with_context(|_| format!("Could not deserialize context file at '{}'. You can try to recreate it with 'context set'.", file.display()))?)
+    Ok(serde_json::from_reader(File::open(&file).with_context(|_| {
+        format!(
+            "Could not read context file at '{}'. Use 'context set \"{}\"' to create one.",
+            file.display(),
+            path_to_context_name(file).unwrap_or_else(|| "default".to_owned())
+        )
+    })?).with_context(|_| {
+        format!("Could not deserialize context file at '{}'. You can try to recreate it with 'context set'.", file.display())
+    })?)
 }

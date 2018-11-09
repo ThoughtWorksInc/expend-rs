@@ -9,6 +9,8 @@ help:
 	$(info journey-tests                | run all stateless journey test)
 	$(info continuous-journey-tests     | run all stateless journey test whenever something changes)
 	$(info cdc                          | generate the pact to expensify - is used in journey-tests)
+	$(info unit                         | run Rust unit tests)
+	$(info continuous-unit              | continuously run Rust unit tests)
 	$(info -- Use docker for all dependencies - run make interactively from there ----------------)
 	$(info interactive-developer-environment-in-docker | gives you everything you need to run all targets)
 
@@ -42,4 +44,10 @@ continuous-journey-tests:
 
 cdc:
 	cargo test --test=client_pact
+
+unit:
+	cargo test --test=unit
+
+continuous-unit:
+	watchexec $(MAKE) unit
 

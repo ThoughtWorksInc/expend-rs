@@ -136,9 +136,9 @@ fn run() -> Result<(), Error> {
                         reference_date: None,
                     });
                     let json_value: serde_json::Value =
-                        serde_yaml::from_reader(std::fs::File::open(&input).with_context(
-                            |_| format!("Failed to open file at '{}'", input.display()),
-                        )?)?;
+                        serde_yaml::from_reader(std::fs::File::open(&input).with_context(|_| {
+                            format!("Failed to open file at '{}'", input.display())
+                        })?)?;
                     expend::Command::Payload(context, payload_type, json_value)
                 }
             };
