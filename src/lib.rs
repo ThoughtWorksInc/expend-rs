@@ -15,12 +15,14 @@ use failure::{Error, ResultExt};
 pub mod context;
 pub mod expensify;
 pub mod perdiem;
+pub mod weekday;
 
 use expensify::TransactionList;
 
 const EXPENSIFY_DATE_FORMAT: &str = "%Y-%m-%d";
 
 pub use context::{Context, Tag, Tags, UserContext};
+pub use weekday::Weekday;
 
 pub enum Command {
     Payload(Option<Context>, String, serde_json::Value),

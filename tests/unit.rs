@@ -3,7 +3,7 @@ extern crate expend;
 mod per_diem {
     use expend::perdiem::TimePeriod;
     use expend::perdiem::TimePeriod::*;
-    use expend::perdiem::Weekday::*;
+    use expend::Weekday::*;
     use std::str::FromStr;
 
     #[test]
