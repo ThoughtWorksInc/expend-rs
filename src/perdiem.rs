@@ -114,6 +114,14 @@ impl FromStr for TimePeriod {
                     match commas.len() {
                         0 => bail!("Didn't see a single weekday in '{}'", s),
                         1 => SingleDay(commas[0]),
+                        2 => if commas[0].numerical() == commas[1].numerical() - 1 {
+                            DayRange {
+                                from: commas[0],
+                                to: commas[1],
+                            }
+                        } else {
+                            Days(commas)
+                        },
                         _ => Days(commas),
                     }
                 }

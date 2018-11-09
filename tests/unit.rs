@@ -46,6 +46,16 @@ mod per_diem {
             })
         );
     }
+    #[test]
+    fn timeperiod_dayrange_from_str_from_consequitive_days() {
+        assert_eq!(
+            "mon,tue".parse().ok(),
+            Some(DayRange {
+                from: Monday,
+                to: Tuesday
+            })
+        );
+    }
 
     #[test]
     fn timeperiod_dayrange_from_str() {
