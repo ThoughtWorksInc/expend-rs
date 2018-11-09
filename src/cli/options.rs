@@ -77,7 +77,7 @@ pub enum PostSubcommands {
         ///       duplicate and out-of-order days can not be expressed as they will be fixed automatically.
         time_period: String,
 
-        #[structopt(raw(possible_values = r#"&["fullday"]"#))]
+        #[structopt(raw(possible_values = r#"&["breakfast", "fullday", "arrival", "departure", "daytrip", "lunch", "dinner"]"#))]
         /// The kind of per diem you need.
         kind: String,
     },

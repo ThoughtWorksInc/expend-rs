@@ -1,0 +1,16 @@
+The following 'create' payload would be sent to Expensify:
+---
+employeeEmail: me@example.com
+transactionList:
+  - amount: 480
+    billable: true
+    category: ""
+    comment: ""
+    created: 1972-08-31
+    currency: EUR
+    merchant: 1 * Germany Breakfast @ €4.80
+    reimbursable: true
+    tag: "project code:Travel"
+type: expenses
+
+error: Aborted before post due to dry-run mode.

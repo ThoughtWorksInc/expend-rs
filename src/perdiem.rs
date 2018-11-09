@@ -5,6 +5,7 @@ use failure::Error;
 use std::str::FromStr;
 use {Context, EXPENSIFY_DATE_FORMAT};
 use TimePeriod;
+use std::fmt;
 
 impl TransactionList {
     pub fn from_per_diem(ctx: Context, period: TimePeriod, kind: Kind) -> Result<Self, Error> {
@@ -18,13 +19,38 @@ impl TransactionList {
 
 pub enum Kind {
     FullDay,
+    Breakfast,
+    Arrival,
+    Departure,
+    Daytrip,
+    Lunch,
+    Dinner
 }
 
 impl Kind {
     fn amount(&self, c: &Country) -> u32 {
+        use self::Kind::*;
         (match c {
-            Germany => 24,
-        }) * 100
+            Germany => match self {
+                FullDay => 240,
+                Breakfast => 48,
+                Daytrip|Arrival|Departure => 120,
+                Lunch|Dinner => 96
+            }
+        }) * 10
+    }
+}
+
+impl fmt::Display for Kind {
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+        use self::Kind::*;
+        match self {
+            FullDay => f.write_str("Full Day"),
+            Breakfast => f.write_str("Breakfast"),
+            Arrival|Departure => f.write_str("Arrival/Departure Day"),
+            Daytrip => f.write_str("Day Trip > 8 Hours"),
+            Lunch|Dinner => f.write_str("Lunch/Dinner"),
+        }
     }
 }
 
@@ -33,8 +59,14 @@ impl FromStr for Kind {
 
     fn from_str(s: &str) -> Result<Self, <Self as FromStr>::Err> {
         use self::Kind::*;
-        Ok(match s {
+        Ok(match s.to_ascii_lowercase().as_str() {
             "fullday" => FullDay,
+            "breakfast" => Breakfast,
+            "arrival" => Arrival,
+            "departure" => Departure,
+            "daytrip" => Daytrip,
+            "lunch" => Lunch,
+            "dinner" => Dinner,
             _ => bail!("Invalid per diem kind specification: '{}'", s),
         })
     }
@@ -46,11 +78,12 @@ fn to_date_string(d: &Date<Utc>) -> String {
 
 fn to_merchant(num_days: u32, ctx: &Context, kind: &Kind) -> String {
     format!(
-        "{} * {} Full Day @ {}{:.2}",
+        "{} * {} {} @ {}{:.2}",
         num_days,
         ctx.user.country,
+        kind,
         ctx.user.country.currency().symbol(),
-        (kind.amount(&ctx.user.country) / 100) as f32
+        (kind.amount(&ctx.user.country) / 10) as f32 / 10.0
     )
 }
 

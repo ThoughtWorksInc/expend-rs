@@ -87,20 +87,6 @@ WITH_FAILURE=1
           step "(setting the context)"
           expect_run ${SUCCESSFULLY} "$exe" context --at . set --email me@example.com --project 'project code'
 
-          (when "using the an unknown per-diem period"
-            it "fails gracefully" && {
-              WITH_SNAPSHOT="$snapshot/failure-create-per-diem-unknown-period" \
-              expect_run ${WITH_FAILURE} "$exe" post --context-dir . $DRY "${CREDS[@]}" per-diem foobar fullday
-            }
-          )
-
-          (when "using the an unknown per-diem kind"
-            it "fails gracefully" && {
-              WITH_SNAPSHOT="$snapshot/failure-create-per-diem-unknown-kind" \
-              expect_run ${WITH_FAILURE} "$exe" post --context-dir . $DRY "${CREDS[@]}" per-diem weekdays foobar
-            }
-          )
-
           (when "using the 'weekdays' period"
             (when "using the 'fullday' kind"
               it "succeeds and creates a properly formatted payload" && {
@@ -126,12 +112,28 @@ WITH_FAILURE=1
             )
           )
           (when "using the 'single-day' period"
-            (when "using the 'fullday' kind"
-              it "succeeds and creates a properly formatted payload" && {
-                WITH_SNAPSHOT="$snapshot/success-create-per-diem-single-day-fullday" \
-                expect_run ${WITH_FAILURE} "$exe" post --context-dir . $DRY "${CREDS[@]}" "${WEEKDATE[@]}" per-diem thursday fullday
-              }
-            )
+            for kind in fullday breakfast arrival departure daytrip lunch dinner; do
+              (when "using the '$kind' kind"
+                it "succeeds and creates a properly formatted payload" && {
+                  WITH_SNAPSHOT="$snapshot/success-create-per-diem-single-day-$kind" \
+                  expect_run ${WITH_FAILURE} "$exe" post --context-dir . $DRY "${CREDS[@]}" "${WEEKDATE[@]}" per-diem thursday $kind
+                }
+              )
+            done
+          )
+
+          (when "using the an unknown per-diem period"
+            it "fails gracefully" && {
+              WITH_SNAPSHOT="$snapshot/failure-create-per-diem-unknown-period" \
+              expect_run ${WITH_FAILURE} "$exe" post --context-dir . $DRY "${CREDS[@]}" per-diem foobar fullday
+            }
+          )
+
+          (when "using the an unknown per-diem kind"
+            it "fails gracefully" && {
+              WITH_SNAPSHOT="$snapshot/failure-create-per-diem-unknown-kind" \
+              expect_run ${WITH_FAILURE} "$exe" post --context-dir . $DRY "${CREDS[@]}" per-diem weekdays foobar
+            }
           )
         )
       )
