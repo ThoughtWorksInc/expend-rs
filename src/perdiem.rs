@@ -105,24 +105,19 @@ impl FromStr for TimePeriod {
                         .map(Weekday::from_str)
                         .collect::<Result<_, _>>()?;
                     commas.sort_by_key(|d| d.numerical());
-                    let commas = commas.into_iter().fold(Vec::new(), |mut acc, d| {
+                    let days = commas.into_iter().fold(Vec::new(), |mut acc, d| {
                         if !acc.iter().any(|od| *od == d) {
                             acc.push(d)
                         }
                         acc
                     });
-                    match commas.len() {
-                        0 => bail!("Didn't see a single weekday in '{}'", s),
-                        1 => SingleDay(commas[0]),
-                        2 => if commas[0].numerical() == commas[1].numerical() - 1 {
-                            DayRange {
-                                from: commas[0],
-                                to: commas[1],
-                            }
-                        } else {
-                            Days(commas)
-                        },
-                        _ => Days(commas),
+                    match days.as_slice() {
+                        [] => bail!("Didn't see a single weekday in '{}'", s),
+                        &[d] => SingleDay(d),
+                        &[from, to] if from.numerical() == to.numerical() - 1 => {
+                            DayRange { from, to }
+                        }
+                        _ => Days(days.clone()),
                     }
                 }
             },
