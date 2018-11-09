@@ -54,6 +54,23 @@ fn to_merchant(num_days: u32, ctx: &Context, kind: &Kind) -> String {
     )
 }
 
+fn to_element_from_range(
+    from: &Date<Utc>,
+    to: &Date<Utc>,
+    ctx: &Context,
+    kind: &Kind,
+) -> TransactionListElement {
+    let num_days = (*to - *from).num_days() + 1;
+    assert!(num_days > 0, "to-date must be larger than from-date");
+
+    to_element(
+        to_date_string(&from),
+        to_comment_from_range(&from, &to),
+        num_days as u32,
+        ctx,
+        &kind,
+    )
+}
 fn to_element(
     created: String,
     comment: String,
@@ -96,34 +113,16 @@ impl TimePeriod {
         match self {
             Weekdays => {
                 let friday = Friday.to_date_from(&monday)?;
-                let num_days = 5;
-
-                ts.push(to_element(
-                    to_date_string(&monday),
-                    to_comment_from_range(&monday, &friday),
-                    num_days,
-                    ctx,
-                    &kind,
-                ));
+                ts.push(to_element_from_range(&monday, &friday, ctx, &kind));
             }
             SingleDay(day) => {
                 let day = day.to_date_from(&monday)?;
                 ts.push(to_element_single_day(&day, ctx, &kind));
             }
             DayRange { from, to } => {
-                let num_days = to.numerical()
-                    .checked_sub(from.numerical())
-                    .expect("to-date to be larger than from-date")
-                    + 1;
                 let from = from.to_date_from(&monday)?;
                 let to = to.to_date_from(&monday)?;
-                ts.push(to_element(
-                    to_date_string(&from),
-                    to_comment_from_range(&from, &to),
-                    num_days.into(),
-                    ctx,
-                    &kind,
-                ));
+                ts.push(to_element_from_range(&from, &to, ctx, &kind));
             }
             Days(d) => for day in d {
                 let day = day.to_date_from(&monday)?;
