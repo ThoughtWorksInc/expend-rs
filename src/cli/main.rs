@@ -111,6 +111,7 @@ fn run() -> Result<(), Error> {
                     context,
                     time_period,
                     kind,
+                    subtract,
                 } => {
                     let context =
                         context::from_file_path(&context::file_path(&context_dir, &context))?;
@@ -120,7 +121,12 @@ fn run() -> Result<(), Error> {
                     };
                     let time_period: expend::TimePeriod = time_period.parse()?;
                     let kind: expend::perdiem::Kind = kind.parse()?;
-                    expend::Command::PerDiem(context, time_period, kind)
+                    let mode = if subtract {
+                        expend::perdiem::Mode::Subtract
+                    } else {
+                        expend::perdiem::Mode::Add
+                    };
+                    expend::Command::PerDiem(context, time_period, kind, mode)
                 }
                 PostSubcommands::FromFile {
                     context,

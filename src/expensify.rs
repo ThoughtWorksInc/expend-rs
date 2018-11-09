@@ -96,7 +96,7 @@ pub struct TransactionListElement {
     pub merchant: String,
 
     #[serde(rename = "amount")]
-    pub amount: i64,
+    pub amount: i32,
 
     #[serde(rename = "category")]
     pub category: String,

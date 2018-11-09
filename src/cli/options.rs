@@ -80,6 +80,11 @@ pub enum PostSubcommands {
         #[structopt(raw(possible_values = r#"&["breakfast", "fullday", "arrival", "departure", "daytrip", "lunch", "dinner"]"#))]
         /// The kind of per diem you need.
         kind: String,
+
+        #[structopt(long = "subtract", short = "s")]
+        /// If set, all values will be negated, effectively subtracting them. Useful if you want to use a range for positive per-diems,
+        /// and subtract individual lunches or dinners.
+        subtract: bool,
     },
     #[structopt(name = "from-file")]
     /// Load a file with structured data and use it as payload.

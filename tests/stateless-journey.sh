@@ -113,10 +113,10 @@ WITH_FAILURE=1
           )
           (when "using the 'single-day' period"
             for kind in fullday breakfast arrival departure daytrip lunch dinner; do
-              (when "using the '$kind' kind"
+              (when "using the '$kind' kind and when subtracting it"
                 it "succeeds and creates a properly formatted payload" && {
                   WITH_SNAPSHOT="$snapshot/success-create-per-diem-single-day-$kind" \
-                  expect_run ${WITH_FAILURE} "$exe" post --context-dir . $DRY "${CREDS[@]}" "${WEEKDATE[@]}" per-diem thursday $kind
+                  expect_run ${WITH_FAILURE} "$exe" post --context-dir . $DRY "${CREDS[@]}" "${WEEKDATE[@]}" per-diem --subtract thursday $kind
                 }
               )
             done

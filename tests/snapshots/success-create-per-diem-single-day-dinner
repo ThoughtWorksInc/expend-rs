@@ -2,13 +2,13 @@ The following 'create' payload would be sent to Expensify:
 ---
 employeeEmail: me@example.com
 transactionList:
-  - amount: 960
+  - amount: -960
     billable: true
     category: ""
     comment: ""
     created: 1972-08-31
     currency: EUR
-    merchant: 1 * Germany Lunch/Dinner @ €9.60
+    merchant: 1 * Germany Lunch/Dinner @ €-9.60
     reimbursable: true
     tag: "project code:Travel"
 type: expenses

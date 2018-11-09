@@ -28,7 +28,7 @@ pub use timeperiod::TimePeriod;
 
 pub enum Command {
     Payload(Option<Context>, String, serde_json::Value),
-    PerDiem(Context, TimePeriod, perdiem::Kind),
+    PerDiem(Context, TimePeriod, perdiem::Kind, perdiem::Mode),
 }
 
 pub fn execute(
@@ -43,9 +43,13 @@ pub fn execute(
     let (payload_type, payload) = match cmd {
         Payload(None, pt, p) => (pt, p),
         Payload(Some(ctx), pt, mut p) => (pt, ctx.user.apply_to_value(p)),
-        PerDiem(ctx, period, kind) => {
-            let payload =
-                serde_json::value::to_value(TransactionList::from_per_diem(ctx, period, kind)?)?;
+        PerDiem(ctx, period, kind, mode) => {
+            let payload = serde_json::value::to_value(TransactionList::from_per_diem(
+                ctx,
+                period,
+                kind,
+                mode,
+            )?)?;
             ("create".to_string(), payload)
         }
     };
