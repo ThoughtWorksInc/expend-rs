@@ -1,3 +1,0 @@
-error: USAGE: target/debug/expend <input>
-
-Where <input> is the input file with statements

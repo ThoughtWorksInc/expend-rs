@@ -4,7 +4,7 @@ employeeEmail: me@example.com
 transactionList:
   - amount: 2400
     billable: true
-    category: ""
+    category: Per Diem/Stipend (pre-approved)
     comment: custom comment
     created: 1972-08-28
     currency: EUR
@@ -13,7 +13,7 @@ transactionList:
     tag: "project code:Travel"
   - amount: 2400
     billable: true
-    category: ""
+    category: Per Diem/Stipend (pre-approved)
     comment: custom comment
     created: 1972-08-30
     currency: EUR
@@ -22,7 +22,7 @@ transactionList:
     tag: "project code:Travel"
   - amount: 2400
     billable: true
-    category: ""
+    category: Per Diem/Stipend (pre-approved)
     comment: custom comment
     created: 1972-09-01
     currency: EUR

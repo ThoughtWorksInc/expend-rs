@@ -4,7 +4,7 @@ employeeEmail: me@example.com
 transactionList:
   - amount: 16800
     billable: true
-    category: ""
+    category: Per Diem/Stipend (pre-approved)
     comment: 1972-08-28 to 1972-09-03
     created: 1972-08-28
     currency: EUR
