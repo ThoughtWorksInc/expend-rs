@@ -13,6 +13,12 @@ mod per_diem {
     }
 
     #[test]
+    fn timeperiod_singleday_from_str_whitespace() {
+        assert_eq!("  Mon".parse().ok(), Some(SingleDay(Monday)));
+        assert_eq!("Monday  ".parse().ok(), Some(SingleDay(Monday)));
+    }
+
+    #[test]
     fn timeperiod_singleday_from_str() {
         assert_eq!("mon".parse().ok(), Some(SingleDay(Monday)));
         assert_eq!("monday".parse().ok(), Some(SingleDay(Monday)));
@@ -31,6 +37,17 @@ mod per_diem {
     }
 
     #[test]
+    fn timeperiod_dayrange_from_str_whitespace() {
+        assert_eq!(
+            "  mon  -  saturday  ".parse().ok(),
+            Some(DayRange {
+                from: Monday,
+                to: Saturday
+            })
+        );
+    }
+
+    #[test]
     fn timeperiod_dayrange_from_str() {
         assert_eq!(
             "mon-saturday".parse().ok(),
@@ -46,8 +63,63 @@ mod per_diem {
                 to: Wednesday
             })
         );
-        assert!(TimePeriod::from_str("wednesday-tue").is_err());
-        assert_eq!("thu-thursday".parse().ok(), Some(SingleDay(Thursday)));
+    }
+    #[test]
+    fn timeperiod_dayrange_from_str_not_enough_days() {
+        assert_eq!(TimePeriod::from_str("mon- ").ok(), Some(SingleDay(Monday)));
+    }
+    #[test]
+    fn timeperiod_dayrange_from_str_too_many_days() {
         assert!(TimePeriod::from_str("mon-saturday-tue").is_err());
+    }
+
+    #[test]
+    fn timeperiod_dayrange_from_str_same_day() {
+        assert_eq!("thu-thursday".parse().ok(), Some(SingleDay(Thursday)));
+    }
+    #[test]
+    fn timeperiod_dayrange_from_str_skip_empties() {
+        assert_eq!("thu- - - Thursday".parse().ok(), Some(SingleDay(Thursday)));
+    }
+
+    #[test]
+    fn timeperiod_dayrange_from_str_invalid_order() {
+        assert!(TimePeriod::from_str("wednesday-tue").is_err());
+    }
+
+    #[test]
+    fn timeperiod_anydays_from_str() {
+        assert_eq!(
+            "mon,tuesday,sun".parse().ok(),
+            Some(Days(vec![Monday, Tuesday, Sunday]))
+        );
+    }
+    #[test]
+    fn timeperiod_anydays_from_str_whitespace() {
+        assert_eq!(
+            " tuesday, Saturday ".parse().ok(),
+            Some(Days(vec![Tuesday, Saturday]))
+        );
+    }
+
+    #[test]
+    fn timeperiod_anydays_from_str_reorder() {
+        assert_eq!(
+            " Saturday, Monday, Wednesday, Sunday ".parse().ok(),
+            Some(Days(vec![Monday, Wednesday, Saturday, Sunday]))
+        );
+    }
+
+    #[test]
+    fn timeperiod_anydays_from_str_duplicates() {
+        assert_eq!("Sunday, sun".parse().ok(), Some(SingleDay(Sunday)));
+    }
+    #[test]
+    fn timeperiod_anydays_from_str_empty_commas() {
+        assert!(TimePeriod::from_str(", , ,").is_err());
+    }
+    #[test]
+    fn timeperiod_anydays_from_str_skip_empty() {
+        assert_eq!("mon, , ,sun".parse().ok(), Some(Days(vec![Monday, Sunday])));
     }
 }

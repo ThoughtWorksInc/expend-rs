@@ -17,7 +17,7 @@ impl TransactionList {
     }
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum Weekday {
     Monday,
     Tuesday,
@@ -33,6 +33,7 @@ pub enum TimePeriod {
     Weekdays,
     SingleDay(Weekday),
     DayRange { from: Weekday, to: Weekday },
+    Days(Vec<Weekday>),
 }
 
 impl FromStr for Weekday {
@@ -92,12 +93,30 @@ impl FromStr for TimePeriod {
 
     fn from_str(s: &str) -> Result<Self, <Self as FromStr>::Err> {
         use self::TimePeriod::*;
-        let mut words = s.split('-');
+        let mut words = s.trim().split('-').map(str::trim).filter(|s| s.len() != 0);
 
         Ok(match (words.next(), words.next(), words.next()) {
             (Some(first), None, None) => match first {
                 "weekdays" => Weekdays,
-                s => SingleDay(s.parse()?),
+                s => {
+                    let mut commas: Vec<_> = s.split(',')
+                        .map(str::trim)
+                        .filter(|s| s.len() != 0)
+                        .map(Weekday::from_str)
+                        .collect::<Result<_, _>>()?;
+                    commas.sort_by_key(|d| d.numerical());
+                    let commas = commas.into_iter().fold(Vec::new(), |mut acc, d| {
+                        if !acc.iter().any(|od| *od == d) {
+                            acc.push(d)
+                        }
+                        acc
+                    });
+                    match commas.len() {
+                        0 => bail!("Didn't see a single weekday in '{}'", s),
+                        1 => SingleDay(commas[0]),
+                        _ => Days(commas),
+                    }
+                }
             },
             (Some(first), Some(second), None) => {
                 let from = first.parse()?;
@@ -181,6 +200,7 @@ impl TimePeriod {
             }
             SingleDay(_day) => unimplemented!("Single-Day"),
             DayRange { from: _, to: _ } => unimplemented!("day range"),
+            Days(_d) => unimplemented!("days"),
         }
         Ok(ts)
     }

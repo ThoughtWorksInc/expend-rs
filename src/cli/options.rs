@@ -59,7 +59,7 @@ pub struct Post {
 
 #[derive(StructOpt)]
 pub enum PostSubcommands {
-    #[structopt(name = "per-diem")]
+    #[structopt(name = "per-diem", alias = "perdiem")]
     /// Post a per-diem, relative to the current week, by default
     PerDiem {
         #[structopt(long = "context", short = "c", default_value = "default")]
@@ -68,10 +68,13 @@ pub enum PostSubcommands {
 
         /// The kind of per-diem to file.
         /// Valid values are:
-        /// weekdays
-        ///     - Equivalent to Monday-Friday
-        /// Mon OR Monday OR Tue OR Tuesday ... Sun OR Sunday
-        ///     - the given singular day, either as shorthand or full identifier. Case-insensitive.
+        /// |weekdays
+        ///     - Equivalent to Monday-Friday|
+        /// |Mon OR Monday OR Tue OR Tuesday ... Sun OR Sunday
+        ///     - the given singular day, either as shorthand or full identifier. Case-insensitive|
+        /// |<day>,<day>[,<day>...]
+        ///     - <day> can be any day like Mon or Monday. Days will be unified, and ordered, thus
+        ///       duplicate and out-of-order days can not be expressed as they will be fixed automatically.
         time_period: String,
 
         #[structopt(raw(possible_values = r#"&["fullday"]"#))]
