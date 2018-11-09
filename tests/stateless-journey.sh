@@ -97,18 +97,34 @@ WITH_FAILURE=1
           )
           (when "using the flexible 'range from-to' period"
             (when "using the 'fullday' kind"
-              it "succeeds and creates a properly formatted payload" && {
-                WITH_SNAPSHOT="$snapshot/success-create-per-diem-range-fullday" \
-                expect_run ${WITH_FAILURE} "$exe" post --context-dir . $DRY "${CREDS[@]}" "${WEEKDATE[@]}" per-diem mon-sun fullday
-              }
+              (with "no comment"
+                it "succeeds and creates a properly formatted payload" && {
+                  WITH_SNAPSHOT="$snapshot/success-create-per-diem-range-fullday" \
+                  expect_run ${WITH_FAILURE} "$exe" post --context-dir . $DRY "${CREDS[@]}" "${WEEKDATE[@]}" per-diem mon-sun fullday
+                }
+              )
+              (with "a comment"
+                it "succeeds and creates a properly formatted payload" && {
+                  WITH_SNAPSHOT="$snapshot/success-create-per-diem-range-fullday-with-comment" \
+                  expect_run ${WITH_FAILURE} "$exe" post --context-dir . $DRY "${CREDS[@]}" "${WEEKDATE[@]}" per-diem mon-sun fullday --comment "custom comment"
+                }
+              )
             )
           )
           (when "using the 'any-given-days' period"
             (when "using the 'fullday' kind"
-              it "succeeds and creates a properly formatted payload" && {
-                WITH_SNAPSHOT="$snapshot/success-create-per-diem-given-days-fullday" \
-                expect_run ${WITH_FAILURE} "$exe" post --context-dir . $DRY "${CREDS[@]}" "${WEEKDATE[@]}" per-diem mon,wednesday,fri fullday
-              }
+              (with "no comment"
+                it "succeeds and creates a properly formatted payload" && {
+                  WITH_SNAPSHOT="$snapshot/success-create-per-diem-given-days-fullday" \
+                  expect_run ${WITH_FAILURE} "$exe" post --context-dir . $DRY "${CREDS[@]}" "${WEEKDATE[@]}" per-diem mon,wednesday,fri fullday
+                }
+              )
+              (with "a comment"
+                it "succeeds and creates a properly formatted payload" && {
+                  WITH_SNAPSHOT="$snapshot/success-create-per-diem-given-days-fullday-with-comment" \
+                  expect_run ${WITH_FAILURE} "$exe" post --context-dir . $DRY "${CREDS[@]}" "${WEEKDATE[@]}" per-diem mon,wednesday,fri fullday -m "custom comment"
+                }
+              )
             )
           )
           (when "using the 'single-day' period"
@@ -120,6 +136,13 @@ WITH_FAILURE=1
                 }
               )
             done
+
+            (with "a custom comment"
+              it "succeeds and uses the comment exclusively" && {
+                WITH_SNAPSHOT="$snapshot/success-create-per-diem-single-day-lunch-with-comment" \
+                expect_run ${WITH_FAILURE} "$exe" post --context-dir . $DRY "${CREDS[@]}" "${WEEKDATE[@]}" per-diem --subtract thursday lunch --comment 'lunch date'
+              }
+            )
           )
 
           (when "using the an unknown per-diem period"

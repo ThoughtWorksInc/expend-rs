@@ -117,10 +117,14 @@ fn to_element_from_range(
 ) -> TransactionListElement {
     let num_days = (*to - *from).num_days() + 1;
     assert!(num_days > 0, "to-date must be larger than from-date");
+    let comment = to_comment_from_range(&from, &to);
 
     to_element(
         to_date_string(&from),
-        to_comment_from_range(&from, &to),
+        ctx.comment
+            .as_ref()
+            .map(|custom| format!("{}: {}", comment, custom))
+            .unwrap_or(comment),
         num_days as u32,
         ctx,
         kind,
@@ -158,7 +162,14 @@ fn to_element_single_day(
     kind: &Kind,
     mode: &Mode,
 ) -> TransactionListElement {
-    to_element(to_date_string(day), "".to_string(), 1, ctx, kind, mode)
+    to_element(
+        to_date_string(day),
+        ctx.comment.clone().unwrap_or_default(),
+        1,
+        ctx,
+        kind,
+        mode,
+    )
 }
 
 impl TimePeriod {

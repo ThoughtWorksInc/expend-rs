@@ -122,6 +122,7 @@ impl UserContext {
 pub struct Context {
     pub user: UserContext,
     pub reference_date: Option<Date<Utc>>,
+    pub comment: Option<String>,
 }
 
 impl Context {

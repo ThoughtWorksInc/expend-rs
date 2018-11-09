@@ -112,12 +112,14 @@ fn run() -> Result<(), Error> {
                     time_period,
                     kind,
                     subtract,
+                    comment,
                 } => {
                     let context =
                         context::from_file_path(&context::file_path(&context_dir, &context))?;
                     let context = expend::Context {
                         user: context,
                         reference_date: post.weekdate,
+                        comment,
                     };
                     let time_period: expend::TimePeriod = time_period.parse()?;
                     let kind: expend::perdiem::Kind = kind.parse()?;
@@ -140,6 +142,7 @@ fn run() -> Result<(), Error> {
                     }.map(|ctx| expend::Context {
                         user: ctx,
                         reference_date: None,
+                        comment: None,
                     });
                     let json_value: serde_json::Value =
                         serde_yaml::from_reader(std::fs::File::open(&input).with_context(|_| {

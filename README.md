@@ -6,5 +6,5 @@ An application tailored to help automating the creation of repetitive expenses w
 * [x] add 'country' to the user context, but default to germany
 * [x] add various per-diem types, like 'lunch/dinner'
 * [x] implement subtraction for per-diems 
-* [ ] custom comment, optional or mandatory depending on kind of per-diem
+* [x] support for custom comments in per-diems
 

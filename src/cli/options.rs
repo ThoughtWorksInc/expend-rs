@@ -85,6 +85,11 @@ pub enum PostSubcommands {
         /// If set, all values will be negated, effectively subtracting them. Useful if you want to use a range for positive per-diems,
         /// and subtract individual lunches or dinners.
         subtract: bool,
+
+        #[structopt(long = "comment", short = "m")]
+        /// The comment to be used. It should explain the purpose of the per-diem.
+        /// If the time period is not a single day, the comment will be added as suffix to comment generated using the dates '<from> to <to>'.
+        comment: Option<String>,
     },
     #[structopt(name = "from-file")]
     /// Load a file with structured data and use it as payload.
