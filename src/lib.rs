@@ -15,7 +15,8 @@ use failure::{Error, ResultExt};
 pub mod context;
 pub mod expensify;
 pub mod perdiem;
-pub mod weekday;
+mod weekday;
+mod timeperiod;
 
 use expensify::TransactionList;
 
@@ -23,10 +24,11 @@ const EXPENSIFY_DATE_FORMAT: &str = "%Y-%m-%d";
 
 pub use context::{Context, Tag, Tags, UserContext};
 pub use weekday::Weekday;
+pub use timeperiod::TimePeriod;
 
 pub enum Command {
     Payload(Option<Context>, String, serde_json::Value),
-    PerDiem(Context, perdiem::TimePeriod, perdiem::Kind),
+    PerDiem(Context, TimePeriod, perdiem::Kind),
 }
 
 pub fn execute(

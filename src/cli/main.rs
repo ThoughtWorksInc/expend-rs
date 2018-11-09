@@ -118,7 +118,7 @@ fn run() -> Result<(), Error> {
                         user: context,
                         reference_date: post.weekdate,
                     };
-                    let time_period: expend::perdiem::TimePeriod = time_period.parse()?;
+                    let time_period: expend::TimePeriod = time_period.parse()?;
                     let kind: expend::perdiem::Kind = kind.parse()?;
                     expend::Command::PerDiem(context, time_period, kind)
                 }
