@@ -1,8 +1,1 @@
-error: 'foobar' isn't a valid value for '<time_period>'
-	[possible values: weekdays]
-
-
-USAGE:
-    expend post per-diem <time_period> <kind> --context <context>
-
-For more information try --help
+error: Invalid weekday specification: 'foobar'

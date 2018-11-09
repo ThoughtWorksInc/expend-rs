@@ -1,5 +1,7 @@
 use std::{fmt, str::FromStr};
 use failure::Error;
+use chrono::prelude::*;
+use time::Duration;
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum Weekday {
@@ -31,6 +33,18 @@ impl FromStr for Weekday {
 }
 
 impl Weekday {
+    pub fn to_date_from(&self, reference: &Date<Utc>) -> Result<Date<Utc>, Error> {
+        reference
+            .checked_add_signed(Duration::days(self.numerical() as i64))
+            .ok_or_else(|| {
+                format_err!(
+                    "Failed to compute day {} from reference date {}",
+                    self,
+                    reference
+                )
+            })
+    }
+
     pub fn is_after(&self, other: &Weekday) -> bool {
         self.numerical() > other.numerical()
     }
