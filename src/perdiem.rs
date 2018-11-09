@@ -78,6 +78,10 @@ fn to_comment_from_range(from: &Date<Utc>, to: &Date<Utc>) -> String {
     format!("{} to {}", to_date_string(&from), to_date_string(&to))
 }
 
+fn to_element_single_day(day: &Date<Utc>, ctx: &Context, kind: &Kind) -> TransactionListElement {
+    to_element(to_date_string(day), "".to_string(), 1, ctx, &kind)
+}
+
 impl TimePeriod {
     fn into_transactions(
         self,
@@ -102,7 +106,10 @@ impl TimePeriod {
                     &kind,
                 ));
             }
-            SingleDay(_day) => unimplemented!("Single-Day"),
+            SingleDay(day) => {
+                let day = day.to_date_from(&monday)?;
+                ts.push(to_element_single_day(&day, ctx, &kind));
+            }
             DayRange { from, to } => {
                 let num_days = to.numerical()
                     .checked_sub(from.numerical())
@@ -118,7 +125,10 @@ impl TimePeriod {
                     &kind,
                 ));
             }
-            Days(_d) => unimplemented!("days"),
+            Days(d) => for day in d {
+                let day = day.to_date_from(&monday)?;
+                ts.push(to_element_single_day(&day, ctx, &kind));
+            },
         }
         Ok(ts)
     }

@@ -117,6 +117,22 @@ WITH_FAILURE=1
               }
             )
           )
+          (when "using the 'any-given-days' period"
+            (when "using the 'fullday' kind"
+              it "succeeds and creates a properly formatted payload" && {
+                WITH_SNAPSHOT="$snapshot/success-create-per-diem-given-days-fullday" \
+                expect_run ${WITH_FAILURE} "$exe" post --context-dir . $DRY "${CREDS[@]}" "${WEEKDATE[@]}" per-diem mon,wednesday,fri fullday
+              }
+            )
+          )
+          (when "using the 'single-day' period"
+            (when "using the 'fullday' kind"
+              it "succeeds and creates a properly formatted payload" && {
+                WITH_SNAPSHOT="$snapshot/success-create-per-diem-single-day-fullday" \
+                expect_run ${WITH_FAILURE} "$exe" post --context-dir . $DRY "${CREDS[@]}" "${WEEKDATE[@]}" per-diem thursday fullday
+              }
+            )
+          )
         )
       )
     )
