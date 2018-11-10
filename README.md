@@ -7,4 +7,8 @@ An application tailored to help automating the creation of repetitive expenses w
 * [x] add various per-diem types, like 'lunch/dinner'
 * [x] implement subtraction for per-diems 
 * [x] support for custom comments in per-diems
+* [ ] travic CI
+* [ ] brew
+* [ ] some installation docs
+* [ ] team snacks sub-command
 
