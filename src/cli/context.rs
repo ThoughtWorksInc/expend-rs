@@ -22,7 +22,9 @@ pub fn handle(from: Option<PathBuf>, cmd: ContextSubcommand) -> Result<(), Error
     let config_dir = into_directory_path(from)?;
     Ok(match cmd {
         ContextSubcommand::Get { name } => {
-            let ctx = from_file_path(&file_path(&config_dir, &name))?;
+            let config_file = file_path(&config_dir, &name);
+            let ctx = from_file_path(&config_file)?;
+            println!("Showing context at '{}'", config_file.display());
             serde_yaml::to_writer(stdout(), &ctx)?;
             println!();
         }
