@@ -6,3 +6,6 @@ tags:
   travel:
     name: Travel
     billable: true
+categories:
+  per_diems:
+    name: Per Diem/Stipend (pre-approved)

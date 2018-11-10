@@ -206,7 +206,8 @@ WITH_FAILURE=1
               --email me@example.com \
               --country Germany \
               --travel-tag-name Travel \
-              --travel-tag-unbillable
+              --travel-tag-unbillable \
+              --category-per-diems-name "perdiem category name"
         }
         it 'writes the expected file' && {
           expect_snapshot "$snapshot/context-dir-multiple-contexts" .

@@ -151,6 +151,11 @@ pub enum ContextSubcommand {
         #[structopt(long = "travel-tag-unbillable")]
         /// If set, all travel expenses will be unbillable.
         travel_unbillable: bool,
+
+        #[structopt(long = "category-per-diems-name",
+                    default_value = "Per Diem/Stipend (pre-approved)")]
+        /// The name of the per-diems category. It will be used to populate the category field in the per-diems subcommand.
+        category_per_diems_name: String,
     },
 
     #[structopt(name = "get")]

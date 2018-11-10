@@ -22,7 +22,7 @@ use expensify::TransactionList;
 
 const EXPENSIFY_DATE_FORMAT: &str = "%Y-%m-%d";
 
-pub use context::{Context, Tag, Tags, UserContext};
+pub use context::{Categories, Category, Context, Tag, Tags, UserContext};
 pub use weekday::Weekday;
 pub use timeperiod::TimePeriod;
 

@@ -144,7 +144,7 @@ fn to_element(
         currency: format!("{}", ctx.user.country.currency()),
         merchant: to_merchant(num_days, ctx, &kind, mode),
         amount: (kind.amount(&ctx.user.country) * num_days) as i32 * mode,
-        category: "Per Diem/Stipend (pre-approved)".to_string(),
+        category: ctx.user.categories.per_diems.name.clone(),
         tag: format!("{}:{}", ctx.user.project.clone(), ctx.user.tags.travel.name),
         billable: ctx.user.tags.travel.billable,
         reimbursable: true,

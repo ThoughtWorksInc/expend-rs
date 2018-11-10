@@ -7,5 +7,10 @@
       "name": "Travel",
       "billable": false
     }
+  },
+  "categories": {
+    "per_diems": {
+      "name": "perdiem category name"
+    }
   }
 }

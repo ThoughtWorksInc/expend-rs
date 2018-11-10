@@ -18,7 +18,7 @@ pub fn file_path(directory: &Path, name: &str) -> PathBuf {
 }
 
 pub fn handle(from: Option<PathBuf>, cmd: ContextSubcommand) -> Result<(), Error> {
-    use expend::{Tag, Tags, UserContext};
+    use expend::{Categories, Category, Tag, Tags, UserContext};
     let config_dir = into_directory_path(from)?;
     Ok(match cmd {
         ContextSubcommand::Get { name } => {
@@ -33,6 +33,7 @@ pub fn handle(from: Option<PathBuf>, cmd: ContextSubcommand) -> Result<(), Error
             country,
             travel_tag_name,
             travel_unbillable,
+            category_per_diems_name,
         } => {
             let config_dir = config_dir;
             create_dir_all(&config_dir).with_context(|_| {
@@ -48,6 +49,11 @@ pub fn handle(from: Option<PathBuf>, cmd: ContextSubcommand) -> Result<(), Error
                 project,
                 email,
                 country: country.parse()?,
+                categories: Categories {
+                    per_diems: Category {
+                        name: category_per_diems_name,
+                    },
+                },
                 tags: Tags {
                     travel: Tag {
                         name: travel_tag_name,

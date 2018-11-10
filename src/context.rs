@@ -77,11 +77,33 @@ pub struct UserContext {
     pub country: Country,
     #[serde(default)]
     pub tags: Tags,
+    #[serde(default)]
+    pub categories: Categories,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct Tags {
     pub travel: Tag,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct Categories {
+    pub per_diems: Category,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct Category {
+    pub name: String,
+}
+
+impl Default for Categories {
+    fn default() -> Self {
+        Categories {
+            per_diems: Category {
+                name: "Per Diem/Stipend (pre-approved)".to_string(),
+            },
+        }
+    }
 }
 
 impl Default for Tags {
