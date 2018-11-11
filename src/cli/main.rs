@@ -40,7 +40,7 @@ fn confirm_payload(mode: Mode, type_name: &str, value: &serde_json::Value) -> Re
     serde_yaml::to_writer(stdout(), value)?;
     println!("\n");
 
-    Ok(match mode {
+    match mode {
         DryRun => {
             bail!("Aborted before post due to dry-run mode.");
         }
@@ -57,7 +57,8 @@ fn confirm_payload(mode: Mode, type_name: &str, value: &serde_json::Value) -> Re
             }
         }
         AutoConfirm => (),
-    })
+    }
+    Ok(())
 }
 
 fn show_value(value: serde_json::Value) -> Result<(), Error> {

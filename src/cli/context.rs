@@ -20,7 +20,7 @@ pub fn file_path(directory: &Path, name: &str) -> PathBuf {
 pub fn handle(from: Option<PathBuf>, cmd: ContextSubcommand) -> Result<(), Error> {
     use expend::{Categories, Category, Tag, Tags, UserContext};
     let config_dir = into_directory_path(from)?;
-    Ok(match cmd {
+    match cmd {
         ContextSubcommand::Get { name } => {
             let config_file = file_path(&config_dir, &name);
             let ctx = from_file_path(&config_file)?;
@@ -94,7 +94,8 @@ pub fn handle(from: Option<PathBuf>, cmd: ContextSubcommand) -> Result<(), Error
                 bail!("Did not find a single contet. Create one using 'context set'.");
             }
         }
-    })
+    }
+    Ok(())
 }
 
 fn path_to_context_name(file: &Path) -> Option<String> {
