@@ -51,7 +51,7 @@ project field from expensify.com.
 
 #### v1.1.0
 
-* [ ] team snacks sub-command
+* [ ] Mileage sub-command
 
 #### v1.0.0
 
