@@ -54,7 +54,9 @@ pub fn store_in_keychain(creds: (String, String)) -> Result<(String, String), Er
     let keyring = Keyring::new("expend-rs cli", &username);
     let creds: Credentials = creds.into();
     let creds_str = serde_json::to_string(&creds)?;
-    keyring.set_password(&creds_str)?;
+    keyring
+        .set_password(&creds_str)
+        .map_err(|_| format_err!("Could not set password"))?;
     Ok(creds.into())
 }
 
