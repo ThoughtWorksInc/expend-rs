@@ -15,8 +15,10 @@ place the binary in your `PATH`.
 
 ### Usage
 
+_Please note that all following commands require some pre-requisites - they are documented further below_.
+
 #### Post Per-Diems
-Once you have stored your generated access key in your keychain, and setup a context, you can create per-diems like this:
+You can create per-diems like this:
 
 ```
 expend post perdiem weekdays fullday
@@ -71,7 +73,7 @@ project field from expensify.com.
 
 ### Maintenance Notes
 
-#### Creating a new release
+#### On creating a new release
 
 * Update the Roadmap so it's clear which new features are included.
 * Update the `version` in `Cargo.toml` to match the new release and push the commit.
