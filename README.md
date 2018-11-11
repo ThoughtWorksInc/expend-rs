@@ -40,12 +40,20 @@ expend post from-file ./payload-file.json
 
 #### Prerequesites
 
-First of all, you should head over to the [expensify integration documentation](https://integrations.expensify.com/Integration-Server/doc/#authentication) to
-generate your set of **credentials**. With these equipped, the first time you run any `expend post` sub-commands you will be prompted for said credentials - by
-default they are stored in your systems keychain for safe-keeping.
+First of all, you should head over to the [expensify integration
+documentation](https://integrations.expensify.com/Integration-Server/doc/#authentication)
+to generate your set of **credentials**. New credentials can be generated [here](https://www.expensify.com/tools/integrations/?action=create).
+With these equipped, the first time you
+run any `expend post` sub-commands you will be prompted for said credentials -
+by default they are stored in your systems keychain for safe-keeping.
 
-Next you should **create a default context**, which identifies your e-mail address and project name. Said project name can be copied directly from the respective
-project field from expensify.com.
+Before you run a command, you have to **create a default context**, which
+identifies your e-mail address and project name. Said project name can be copied
+directly from the respective project field from expensify.com. This can be done like this:
+
+```
+expend context set -e your_email@domain.com -p 'Project Name'
+```
 
 ### Roadmap
 
