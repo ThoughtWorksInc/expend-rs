@@ -1,17 +1,19 @@
+#!/usr/bin/env sh
 set -ex
 
 main() {
-    local target=
+    target=
     if [ $TRAVIS_OS_NAME = linux ]; then
         target=x86_64-unknown-linux-musl
-        sort=sort
+        sort='sort'
     else
         target=x86_64-apple-darwin
-        sort=gsort  # for `sort --sort-version`, from brew's coreutils.
+        sort='gsort'  # for `sort --sort-version`, from brew's coreutils.
     fi
 
     # Builds for iOS are done on OSX, but require the specific target to be
     # installed.
+    # shellcheck disable=2153
     case $TARGET in
         aarch64-apple-ios)
             rustup target install aarch64-apple-ios
@@ -40,7 +42,7 @@ main() {
         sh -s -- \
            --force \
            --git japaric/cross \
-           --tag $tag \
+           --tag "$tag" \
            --target $target
 }
 
