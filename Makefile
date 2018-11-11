@@ -11,10 +11,14 @@ help:
 	$(info cdc                          | generate the pact to expensify - is used in journey-tests)
 	$(info unit                         | run Rust unit tests)
 	$(info continuous-unit              | continuously run Rust unit tests)
+	$(info update-homebrew              | wait for the current version to be ready on github and update homebrew file)
 	$(info -- Use docker for all dependencies - run make interactively from there ----------------)
 	$(info interactive-developer-environment-in-docker | gives you everything you need to run all targets)
 
 always:
+
+update-homebrew:
+	@set -ex; ./etc/brew/update-homebrew-formula.sh $$(git tag | tail -1) ./etc/brew/expend.rb.in ./pkg/brew/expend.rb
 
 interactive-developer-environment-in-docker:
 	docker build -t $(docker_image) - < etc/developer.Dockerfile

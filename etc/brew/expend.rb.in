@@ -1,0 +1,13 @@
+class Expend < Formula
+  # '${TEMPLATE_NOTE}'
+  version '${VERSION}'
+  desc "Automate repetitive expenses for Expensify.com"
+  homepage "https://github.com/Byron-TW/expend-rs"
+
+  url "https://github.com/Byron-TW/expend-rs/releases/download/${VERSION}/expend-${VERSION}-x86_64-apple-darwin.tar.gz"
+  sha256 "${OSX_SHA256}"
+
+  def install
+    bin.install "expend"
+  end
+end
