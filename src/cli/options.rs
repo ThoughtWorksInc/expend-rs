@@ -9,7 +9,7 @@ use structopt::StructOpt;
 #[structopt(raw(setting = "structopt::clap::AppSettings::SubcommandRequired"))]
 pub enum Args {
     #[structopt(name = "post")]
-    /// Load a file with structured data and use it as payload
+    /// Create an expense in expensify.
     Post(Post),
     #[structopt(name = "context", alias = "contexts")]
     /// Interact with contexts - one or more sets of properties that are shared across many sub-commands
