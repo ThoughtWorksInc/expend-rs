@@ -78,7 +78,7 @@ pub fn handle(from: Option<PathBuf>, cmd: ContextSubcommand) -> Result<(), Error
             }
 
             let mut count = 0;
-            for stem in read_dir(&config_dir)?
+            let mut sorted_stems: Vec<_> = read_dir(&config_dir)?
                 .filter_map(Result::ok)
                 .map(|e| e.path())
                 .filter_map(|p: PathBuf| match p.extension() {
@@ -86,7 +86,9 @@ pub fn handle(from: Option<PathBuf>, cmd: ContextSubcommand) -> Result<(), Error
                     _ => None,
                 })
                 .filter_map(|p| path_to_context_name(&p))
-            {
+                .collect();
+            sorted_stems.sort();
+            for stem in sorted_stems {
                 println!("{}", stem);
                 count += 1;
             }
