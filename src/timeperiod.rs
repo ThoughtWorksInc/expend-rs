@@ -1,6 +1,6 @@
-use Weekday;
 use failure::{bail, Error};
 use std::str::FromStr;
+use Weekday;
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum TimePeriod {
@@ -21,7 +21,8 @@ impl FromStr for TimePeriod {
             (Some(first), None, None) => match first {
                 "weekdays" => Weekdays,
                 s => {
-                    let mut commas: Vec<_> = s.split(',')
+                    let mut commas: Vec<_> = s
+                        .split(',')
                         .map(str::trim)
                         .filter(|s| s.len() != 0)
                         .map(Weekday::from_str)

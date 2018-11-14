@@ -1,6 +1,6 @@
-use std::{fmt, str::FromStr};
-use failure::Error;
 use chrono::prelude::*;
+use failure::Error;
+use std::{fmt, str::FromStr};
 use time::Duration;
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]

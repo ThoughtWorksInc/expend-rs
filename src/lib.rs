@@ -15,16 +15,16 @@ use failure::{Error, ResultExt};
 pub mod context;
 pub mod expensify;
 pub mod perdiem;
-mod weekday;
 mod timeperiod;
+mod weekday;
 
 use expensify::TransactionList;
 
 const EXPENSIFY_DATE_FORMAT: &str = "%Y-%m-%d";
 
 pub use context::{Categories, Category, Context, Tag, Tags, UserContext};
-pub use weekday::Weekday;
 pub use timeperiod::TimePeriod;
+pub use weekday::Weekday;
 
 pub enum Command {
     Payload(Option<Context>, String, serde_json::Value),
@@ -45,10 +45,7 @@ pub fn execute(
         Payload(Some(ctx), pt, mut p) => (pt, ctx.user.apply_to_value(p)),
         PerDiem(ctx, period, kind, mode) => {
             let payload = serde_json::value::to_value(TransactionList::from_per_diem(
-                ctx,
-                period,
-                kind,
-                mode,
+                ctx, period, kind, mode,
             )?)?;
             ("create".to_string(), payload)
         }

@@ -2,8 +2,8 @@ extern crate expend;
 
 mod per_diem {
     mod timeperiod {
-        use expend::{TimePeriod, TimePeriod::*};
         use expend::Weekday::*;
+        use expend::{TimePeriod, TimePeriod::*};
         use std::str::FromStr;
 
         #[test]

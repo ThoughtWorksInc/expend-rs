@@ -1,6 +1,10 @@
 use failure::{bail, format_err, Error, ResultExt};
 use options::ContextSubcommand;
-use std::{fs::{create_dir_all, read_dir, File}, io::stdout, path::{Path, PathBuf}};
+use std::{
+    fs::{create_dir_all, read_dir, File},
+    io::stdout,
+    path::{Path, PathBuf},
+};
 
 pub fn into_directory_path(directory: Option<PathBuf>) -> Result<PathBuf, Error> {
     directory
@@ -9,8 +13,7 @@ pub fn into_directory_path(directory: Option<PathBuf>) -> Result<PathBuf, Error>
                 d.push("expend-rs");
                 d
             })
-        })
-        .ok_or_else(|| format_err!("Could not find configuration directory"))
+        }).ok_or_else(|| format_err!("Could not find configuration directory"))
 }
 
 pub fn file_path(directory: &Path, name: &str) -> PathBuf {
@@ -84,8 +87,7 @@ pub fn handle(from: Option<PathBuf>, cmd: ContextSubcommand) -> Result<(), Error
                 .filter_map(|p: PathBuf| match p.extension() {
                     Some(ext) if ext == "json" => Some(p.clone()),
                     _ => None,
-                })
-                .filter_map(|p| path_to_context_name(&p))
+                }).filter_map(|p| path_to_context_name(&p))
                 .collect();
             sorted_stems.sort();
             for stem in sorted_stems {

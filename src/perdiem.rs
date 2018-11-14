@@ -2,10 +2,10 @@ use chrono::{Date, Utc};
 use context::{Country, Country::*};
 use expensify::{TransactionList, TransactionListElement};
 use failure::Error;
-use std::str::FromStr;
-use {Context, EXPENSIFY_DATE_FORMAT};
-use TimePeriod;
 use std::fmt;
+use std::str::FromStr;
+use TimePeriod;
+use {Context, EXPENSIFY_DATE_FORMAT};
 
 impl TransactionList {
     pub fn from_per_diem(

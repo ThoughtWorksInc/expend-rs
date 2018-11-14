@@ -48,7 +48,11 @@ pub struct Post {
     /// Defaults to your <OS config dir>/expend-rs
     pub context_from: Option<PathBuf>,
 
-    #[structopt(parse(try_from_str = "expend::from_date_string"), long = "weekdate", alias = "w")]
+    #[structopt(
+        parse(try_from_str = "expend::from_date_string"),
+        long = "weekdate",
+        alias = "w"
+    )]
     /// The date of a day in the week that your per-diem dates should assume, formatted
     /// like 2018-09-25.
     pub weekdate: Option<Date<Utc>>,
@@ -77,7 +81,9 @@ pub enum PostSubcommands {
         ///       duplicate and out-of-order days can not be expressed as they will be fixed automatically.
         time_period: String,
 
-        #[structopt(raw(possible_values = r#"&["breakfast", "fullday", "arrival", "departure", "daytrip", "lunch", "dinner"]"#))]
+        #[structopt(raw(
+            possible_values = r#"&["breakfast", "fullday", "arrival", "departure", "daytrip", "lunch", "dinner"]"#
+        ))]
         /// The kind of per diem you need.
         kind: String,
 
@@ -152,8 +158,10 @@ pub enum ContextSubcommand {
         /// If set, all travel expenses will be unbillable.
         travel_unbillable: bool,
 
-        #[structopt(long = "category-per-diems-name",
-                    default_value = "Per Diem/Stipend (pre-approved)")]
+        #[structopt(
+            long = "category-per-diems-name",
+            default_value = "Per Diem/Stipend (pre-approved)"
+        )]
         /// The name of the per-diems category. It will be used to populate the category field in the per-diems subcommand.
         category_per_diems_name: String,
     },
