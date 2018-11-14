@@ -1,5 +1,6 @@
 [![Build Status](https://travis-ci.org/Byron-TW/expend-rs.svg?branch=master)](https://travis-ci.org/Byron-TW/expend-rs)
 
+
 An application tailored to help automating the creation of repetitive expenses which don't require a receipt, namely *per diems*, *mileage* and *free-form expenses* for everything else.
 
 ### Installation on OSX
