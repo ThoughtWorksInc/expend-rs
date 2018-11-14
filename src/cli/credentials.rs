@@ -70,5 +70,5 @@ pub fn query_from_user() -> Result<(String, String), Error> {
         .read_passwd(&mut stderr())?
         .ok_or_else(|| format_err!("Cannot proceed without a password."))?;
     eprintln!();
-    Ok((user_id, user_secret))
+    Ok((user_id.trim().to_owned(), user_secret))
 }

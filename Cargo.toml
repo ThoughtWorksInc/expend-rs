@@ -1,6 +1,6 @@
 [package]
 name = "expend"
-version = "1.0.0"
+version = "1.0.1"
 authors = ["Sebastian Thiel <byronimo@gmail.com>"]
 publish = false
 

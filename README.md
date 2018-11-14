@@ -61,6 +61,11 @@ expend context set -e your_email@domain.com -p 'Project Name'
 
 * [ ] Mileage sub-command
 
+#### v1.0.1
+
+* [x] Properly cleanup username after entering it. Otherwise an 'n' will be appended, which formerly
+  was a newline.
+
 #### v1.0.0
 
 * [x] add 'travel-billable' flag to the user context
