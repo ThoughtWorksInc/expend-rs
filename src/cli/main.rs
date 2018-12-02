@@ -2,6 +2,7 @@ extern crate expend;
 extern crate failure;
 extern crate failure_tools;
 extern crate keyring;
+extern crate open;
 #[macro_use]
 extern crate serde_derive;
 extern crate dirs;
@@ -72,6 +73,18 @@ fn run() -> Result<(), Error> {
     let opt: Args = Args::from_args();
 
     Ok(match opt {
+        Args::Authenticate => {
+            if credentials::from_keychain_or_clear(false).is_ok() {
+                eprintln!("You have credentials stored already. Proceeding will overwrite them with the newly generated ones.");
+            } else {
+                eprintln!("In order to Authenticate, you need to generate credentials on the Expensify website.");
+            };
+            credentials::query_from_user()
+            .and_then(|creds| {
+                eprintln!("Storing credentials in keychain. Once you have created a context with 'context set' you are ready to 'post'.");
+                credentials::store_in_keychain(creds)
+            }).map(|_| ())?
+        }
         Args::Post(post) => {
             let (user, secret) = match (&post.user_id, &post.user_secret) {
                 (Some(ref user), Some(ref secret)) => (user.to_owned(), secret.to_owned()),
@@ -82,7 +95,9 @@ fn run() -> Result<(), Error> {
                 (None, None) => match if post.no_keychain {
                     None
                 } else {
-                    credentials::from_keychain_or_clear(post.clear_keychain_entry)?
+                    let creds = credentials::from_keychain_or_clear(post.clear_keychain_entry)?;
+                    eprintln!("Using Expensify credentials from keychain.");
+                    creds
                 } {
                     Some(creds) => creds,
                     None => credentials::query_from_user().and_then(|creds| {

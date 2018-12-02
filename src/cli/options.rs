@@ -14,6 +14,10 @@ pub enum Args {
     #[structopt(name = "context", alias = "contexts")]
     /// Interact with contexts - one or more sets of properties that are shared across many sub-commands
     Context(Context),
+    #[structopt(name = "authenticate")]
+    /// Authenticate yourself towards Expensify and store the obtained credentials in your keychain.
+    /// This is done for you the first time you try to post if no stored credentials are found.
+    Authenticate,
 }
 
 #[derive(StructOpt)]

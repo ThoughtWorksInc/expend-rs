@@ -1,10 +1,12 @@
-use failure::{format_err, Error};
+use failure::{format_err, Error, ResultExt};
 use keyring::Keyring;
 use std::{
     io::{stderr, stdin},
     str::FromStr,
 };
 use termion::input::TermRead;
+
+const AUTHENTICATION_URL: &str = "https://www.expensify.com/tools/integrations/";
 
 #[derive(Serialize, Deserialize)]
 struct Credentials {
@@ -43,7 +45,6 @@ pub fn from_keychain_or_clear(clear: bool) -> Result<Option<(String, String)>, E
         keyring.delete_password().ok();
         Ok(None)
     } else {
-        eprintln!("Trying to use previously saved credentials from keychain.");
         let credentials: Credentials = match keyring.get_password() {
             Ok(pw) => pw.parse()?,
             Err(_) => return Ok(None),
@@ -64,6 +65,16 @@ pub fn store_in_keychain(creds: (String, String)) -> Result<(String, String), Er
 }
 
 pub fn query_from_user() -> Result<(String, String), Error> {
+    eprint!("To obtain Expensify credentials, hit enter to generate them in your browser (use 'SAML' for login), or n otherwise: ");
+    let mut answer = String::new();
+    stdin().read_line(&mut answer)?;
+    answer = answer.to_lowercase();
+    if answer.trim() != "n" {
+        open::that(AUTHENTICATION_URL).with_context(|_| {
+            format!("Could not open '{}' in your browser.", AUTHENTICATION_URL)
+        })?;
+    }
+
     eprint!("Please enter your user user-id: ");
     let mut user_id = String::new();
     stdin().read_line(&mut user_id)?;
