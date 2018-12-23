@@ -28,7 +28,8 @@ impl Client {
                 .unwrap_or_else(|| {
                     Url::from_str("https://integrations.expensify.com")
                         .expect("default url to be correct")
-                }).into(),
+                })
+                .into(),
             username: username.into(),
             password: password.into(),
         }

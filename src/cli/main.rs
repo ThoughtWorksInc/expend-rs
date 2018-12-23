@@ -155,7 +155,8 @@ fn run() -> Result<(), Error> {
                     let context = match context {
                         Some(file) => Some(context::from_file_path(&file)?),
                         None => None,
-                    }.map(|ctx| expend::Context {
+                    }
+                    .map(|ctx| expend::Context {
                         user: ctx,
                         reference_date: None,
                         comment: None,
@@ -170,7 +171,8 @@ fn run() -> Result<(), Error> {
 
             expend::execute(user, secret, cmd, |type_name, value| {
                 confirm_payload(mode, type_name, value)
-            }).and_then(show_value)?
+            })
+            .and_then(show_value)?
         }
         Args::Context(Context { from, cmd }) => {
             context::handle(from, cmd)?;

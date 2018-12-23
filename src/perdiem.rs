@@ -198,10 +198,12 @@ impl TimePeriod {
                 let to = to.to_date_from(&monday)?;
                 ts.push(to_element_from_range(&from, &to, ctx, &kind, &mode));
             }
-            Days(d) => for day in d {
-                let day = day.to_date_from(&monday)?;
-                ts.push(to_element_single_day(&day, ctx, &kind, &mode));
-            },
+            Days(d) => {
+                for day in d {
+                    let day = day.to_date_from(&monday)?;
+                    ts.push(to_element_single_day(&day, ctx, &kind, &mode));
+                }
+            }
         }
         Ok(ts)
     }
