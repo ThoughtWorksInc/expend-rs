@@ -11,6 +11,8 @@ help:
 	$(info cdc                          | generate the pact to expensify - is used in journey-tests)
 	$(info unit                         | run Rust unit tests)
 	$(info continuous-unit              | continuously run Rust unit tests)
+	$(info audit                        | Run cargo-audit to find dependencies with exploitable bugs)
+	$(info CI                           | run all targets relevant to the quality of this software)
 	$(info update-homebrew              | wait for the current version to be ready on github and update homebrew file)
 	$(info -- Use docker for all dependencies - run make interactively from there ----------------)
 	$(info interactive-developer-environment-in-docker | gives you everything you need to run all targets)
@@ -51,6 +53,11 @@ cdc:
 
 unit:
 	cargo test --test=unit
+
+audit:
+	cargo audit
+
+CI: lint audit unit cdc journey-test
 
 continuous-unit:
 	watchexec $(MAKE) unit
