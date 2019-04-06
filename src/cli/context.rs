@@ -37,6 +37,7 @@ pub fn handle(from: Option<PathBuf>, cmd: ContextSubcommand) -> Result<(), Error
             project,
             email,
             country,
+            destination,
             travel_tag_name,
             travel_unbillable,
             category_per_diems_name,
@@ -55,6 +56,11 @@ pub fn handle(from: Option<PathBuf>, cmd: ContextSubcommand) -> Result<(), Error
                 project,
                 email,
                 country: country.parse()?,
+                destination: match destination.map(|s| s.parse()) {
+                    Some(Err(err)) => return Err(err),
+                    Some(Ok(d)) => Some(d),
+                    None => None,
+                },
                 categories: Categories {
                     per_diems: Category {
                         name: category_per_diems_name,

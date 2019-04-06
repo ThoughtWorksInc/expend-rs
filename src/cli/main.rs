@@ -70,10 +70,10 @@ fn show_value(value: serde_json::Value) -> Result<(), Error> {
 
 fn run() -> Result<(), Error> {
     use structopt::StructOpt;
-    let opt: Args = Args::from_args();
+    let opt: Options = Options::from_args();
 
     Ok(match opt {
-        Args::Authenticate => {
+        Options::Authenticate => {
             if credentials::from_keychain_or_clear(false).is_ok() {
                 eprintln!("You have credentials stored already. Proceeding will overwrite them with the newly generated ones.");
             } else {
@@ -85,7 +85,7 @@ fn run() -> Result<(), Error> {
                 credentials::store_in_keychain(creds)
             }).map(|_| ())?
         }
-        Args::Post(post) => {
+        Options::Post(post) => {
             let (user, secret) = match (&post.user_id, &post.user_secret) {
                 (Some(ref user), Some(ref secret)) => (user.to_owned(), secret.to_owned()),
                 (Some(_), None) => {
@@ -174,7 +174,7 @@ fn run() -> Result<(), Error> {
             })
             .and_then(show_value)?
         }
-        Args::Context(Context { from, cmd }) => {
+        Options::Context(Context { from, cmd }) => {
             context::handle(from, cmd)?;
             std::process::exit(0);
         }

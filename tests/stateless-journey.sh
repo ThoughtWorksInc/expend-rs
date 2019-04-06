@@ -82,81 +82,97 @@ WITH_FAILURE=1
             expect_run ${WITH_FAILURE} "$exe" post --context-dir . $DRY "${CREDS[@]}" per-diem weekdays fullday
           }
         )
+        WEEKDATE=(--weekdate 1972-09-02)
         (with "a default context available (and the time set to a known date)"
-          WEEKDATE=(--weekdate 1972-09-02)
-          step "(setting the context)"
-          expect_run ${SUCCESSFULLY} "$exe" context --at . set --email me@example.com --project 'project code'
+          (when "country is Germany and destination is India-Other"
+            step "(setting the context)"
+            expect_run ${SUCCESSFULLY} "$exe" context --at . set --country Germany --destination India-Other --email me@example.com --project 'project code'
+            (when "using the 'weekdays' period"
+              (when "using the 'fullday' kind"
+                it "succeeds and creates a properly formatted payload" && {
+                  WITH_SNAPSHOT="$snapshot/success-create-per-diem-weekdays-fullday-germany-for-india-other" \
+                  expect_run ${WITH_FAILURE} "$exe" post --context-dir . $DRY "${CREDS[@]}" "${WEEKDATE[@]}" per-diem weekdays fullday
+                }
+              )
+            )
+          )
+        )
+        (with "a default context available (and the time set to a known date)"
+          (when "country is Germany and destination is Germany (which is the default)"
+            step "(setting the context)"
+            expect_run ${SUCCESSFULLY} "$exe" context --at . set --email me@example.com --project 'project code'
 
-          (when "using the 'weekdays' period"
-            (when "using the 'fullday' kind"
-              it "succeeds and creates a properly formatted payload" && {
-                WITH_SNAPSHOT="$snapshot/success-create-per-diem-weekdays-fullday" \
-                expect_run ${WITH_FAILURE} "$exe" post --context-dir . $DRY "${CREDS[@]}" "${WEEKDATE[@]}" per-diem weekdays fullday
+            (when "using the 'weekdays' period"
+              (when "using the 'fullday' kind"
+                it "succeeds and creates a properly formatted payload" && {
+                  WITH_SNAPSHOT="$snapshot/success-create-per-diem-weekdays-fullday" \
+                  expect_run ${WITH_FAILURE} "$exe" post --context-dir . $DRY "${CREDS[@]}" "${WEEKDATE[@]}" per-diem weekdays fullday
+                }
+              )
+            )
+            (when "using the flexible 'range from-to' period"
+              (when "using the 'fullday' kind"
+                (with "no comment"
+                  it "succeeds and creates a properly formatted payload" && {
+                    WITH_SNAPSHOT="$snapshot/success-create-per-diem-range-fullday" \
+                    expect_run ${WITH_FAILURE} "$exe" post --context-dir . $DRY "${CREDS[@]}" "${WEEKDATE[@]}" per-diem mon-sun fullday
+                  }
+                )
+                (with "a comment"
+                  it "succeeds and creates a properly formatted payload" && {
+                    WITH_SNAPSHOT="$snapshot/success-create-per-diem-range-fullday-with-comment" \
+                    expect_run ${WITH_FAILURE} "$exe" post --context-dir . $DRY "${CREDS[@]}" "${WEEKDATE[@]}" per-diem mon-sun fullday --comment "custom comment"
+                  }
+                )
+              )
+            )
+            (when "using the 'any-given-days' period"
+              (when "using the 'fullday' kind"
+                (with "no comment"
+                  it "succeeds and creates a properly formatted payload" && {
+                    WITH_SNAPSHOT="$snapshot/success-create-per-diem-given-days-fullday" \
+                    expect_run ${WITH_FAILURE} "$exe" post --context-dir . $DRY "${CREDS[@]}" "${WEEKDATE[@]}" per-diem mon,wednesday,fri fullday
+                  }
+                )
+                (with "a comment"
+                  it "succeeds and creates a properly formatted payload" && {
+                    WITH_SNAPSHOT="$snapshot/success-create-per-diem-given-days-fullday-with-comment" \
+                    expect_run ${WITH_FAILURE} "$exe" post --context-dir . $DRY "${CREDS[@]}" "${WEEKDATE[@]}" per-diem mon,wednesday,fri fullday -m "custom comment"
+                  }
+                )
+              )
+            )
+            (when "using the 'single-day' period"
+              for kind in fullday breakfast arrival departure daytrip lunch dinner; do
+                (when "using the '$kind' kind and when subtracting it"
+                  it "succeeds and creates a properly formatted payload" && {
+                    WITH_SNAPSHOT="$snapshot/success-create-per-diem-single-day-$kind" \
+                    expect_run ${WITH_FAILURE} "$exe" post --context-dir . $DRY "${CREDS[@]}" "${WEEKDATE[@]}" per-diem --subtract thursday $kind
+                  }
+                )
+              done
+
+              (with "a custom comment"
+                it "succeeds and uses the comment exclusively" && {
+                  WITH_SNAPSHOT="$snapshot/success-create-per-diem-single-day-lunch-with-comment" \
+                  expect_run ${WITH_FAILURE} "$exe" post --context-dir . $DRY "${CREDS[@]}" "${WEEKDATE[@]}" per-diem --subtract thursday lunch --comment 'lunch date'
+                }
+              )
+            )
+
+            (when "using the an unknown per-diem period"
+              it "fails gracefully" && {
+                WITH_SNAPSHOT="$snapshot/failure-create-per-diem-unknown-period" \
+                expect_run ${WITH_FAILURE} "$exe" post --context-dir . $DRY "${CREDS[@]}" per-diem foobar fullday
               }
             )
-          )
-          (when "using the flexible 'range from-to' period"
-            (when "using the 'fullday' kind"
-              (with "no comment"
-                it "succeeds and creates a properly formatted payload" && {
-                  WITH_SNAPSHOT="$snapshot/success-create-per-diem-range-fullday" \
-                  expect_run ${WITH_FAILURE} "$exe" post --context-dir . $DRY "${CREDS[@]}" "${WEEKDATE[@]}" per-diem mon-sun fullday
-                }
-              )
-              (with "a comment"
-                it "succeeds and creates a properly formatted payload" && {
-                  WITH_SNAPSHOT="$snapshot/success-create-per-diem-range-fullday-with-comment" \
-                  expect_run ${WITH_FAILURE} "$exe" post --context-dir . $DRY "${CREDS[@]}" "${WEEKDATE[@]}" per-diem mon-sun fullday --comment "custom comment"
-                }
-              )
-            )
-          )
-          (when "using the 'any-given-days' period"
-            (when "using the 'fullday' kind"
-              (with "no comment"
-                it "succeeds and creates a properly formatted payload" && {
-                  WITH_SNAPSHOT="$snapshot/success-create-per-diem-given-days-fullday" \
-                  expect_run ${WITH_FAILURE} "$exe" post --context-dir . $DRY "${CREDS[@]}" "${WEEKDATE[@]}" per-diem mon,wednesday,fri fullday
-                }
-              )
-              (with "a comment"
-                it "succeeds and creates a properly formatted payload" && {
-                  WITH_SNAPSHOT="$snapshot/success-create-per-diem-given-days-fullday-with-comment" \
-                  expect_run ${WITH_FAILURE} "$exe" post --context-dir . $DRY "${CREDS[@]}" "${WEEKDATE[@]}" per-diem mon,wednesday,fri fullday -m "custom comment"
-                }
-              )
-            )
-          )
-          (when "using the 'single-day' period"
-            for kind in fullday breakfast arrival departure daytrip lunch dinner; do
-              (when "using the '$kind' kind and when subtracting it"
-                it "succeeds and creates a properly formatted payload" && {
-                  WITH_SNAPSHOT="$snapshot/success-create-per-diem-single-day-$kind" \
-                  expect_run ${WITH_FAILURE} "$exe" post --context-dir . $DRY "${CREDS[@]}" "${WEEKDATE[@]}" per-diem --subtract thursday $kind
-                }
-              )
-            done
 
-            (with "a custom comment"
-              it "succeeds and uses the comment exclusively" && {
-                WITH_SNAPSHOT="$snapshot/success-create-per-diem-single-day-lunch-with-comment" \
-                expect_run ${WITH_FAILURE} "$exe" post --context-dir . $DRY "${CREDS[@]}" "${WEEKDATE[@]}" per-diem --subtract thursday lunch --comment 'lunch date'
+            (when "using the an unknown per-diem kind"
+              it "fails gracefully" && {
+                WITH_SNAPSHOT="$snapshot/failure-create-per-diem-unknown-kind" \
+                expect_run ${WITH_FAILURE} "$exe" post --context-dir . $DRY "${CREDS[@]}" per-diem weekdays foobar
               }
             )
-          )
-
-          (when "using the an unknown per-diem period"
-            it "fails gracefully" && {
-              WITH_SNAPSHOT="$snapshot/failure-create-per-diem-unknown-period" \
-              expect_run ${WITH_FAILURE} "$exe" post --context-dir . $DRY "${CREDS[@]}" per-diem foobar fullday
-            }
-          )
-
-          (when "using the an unknown per-diem kind"
-            it "fails gracefully" && {
-              WITH_SNAPSHOT="$snapshot/failure-create-per-diem-unknown-kind" \
-              expect_run ${WITH_FAILURE} "$exe" post --context-dir . $DRY "${CREDS[@]}" per-diem weekdays foobar
-            }
           )
         )
       )
@@ -205,6 +221,7 @@ WITH_FAILURE=1
               --project 'some other project name' \
               --email me@example.com \
               --country Germany \
+              --destination India-Other \
               --travel-tag-name Travel \
               --travel-tag-unbillable \
               --category-per-diems-name "perdiem category name"

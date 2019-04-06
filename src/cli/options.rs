@@ -7,7 +7,7 @@ use structopt::StructOpt;
 #[derive(StructOpt)]
 #[structopt(raw(setting = "structopt::clap::AppSettings::ColoredHelp"))]
 #[structopt(raw(setting = "structopt::clap::AppSettings::SubcommandRequired"))]
-pub enum Args {
+pub enum Options {
     #[structopt(name = "post")]
     /// Create an expense in expensify.
     Post(Post),
@@ -145,6 +145,12 @@ pub enum ContextSubcommand {
         #[structopt(raw(possible_values = r#"&["Germany"]"#))]
         /// The name of the country you are in. It's used to identify your currency and currency symbol.
         country: String,
+
+        #[structopt(long = "destination", short = "d")]
+        #[structopt(raw(possible_values = r#"&["India-Other"]"#))]
+        /// If set, this should be a known destination which is relative to the country set with --country.
+        /// If unset, it will default to your country.
+        destination: Option<String>,
 
         #[structopt(long = "project", short = "p")]
         /// The project identifier. It's exactly what you see when selecting the project in Expensify

@@ -322,7 +322,7 @@ dependencies = [
 
 [[package]]
 name = "expend"
-version = "1.1.0"
+version = "1.2.0"
 dependencies = [
  "chrono 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "dirs 1.0.4 (registry+https://github.com/rust-lang/crates.io-index)",

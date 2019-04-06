@@ -2,6 +2,7 @@
   "project": "some other project name",
   "email": "me@example.com",
   "country": "Germany",
+  "destination": "IndiaOther",
   "tags": {
     "travel": {
       "name": "Travel",

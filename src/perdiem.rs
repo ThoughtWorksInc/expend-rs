@@ -1,5 +1,5 @@
 use chrono::{Date, Utc};
-use context::{Country, Country::*};
+use context::{Country, Country::*, Destination};
 use expensify::{TransactionList, TransactionListElement};
 use failure::Error;
 use std::fmt;
@@ -49,16 +49,32 @@ pub enum Kind {
 }
 
 impl Kind {
-    fn amount(&self, c: &Country) -> u32 {
+    fn amount(&self, c: &Country, d: Option<&Destination>) -> u32 {
         use self::Kind::*;
-        (match c {
-            Germany => match self {
-                FullDay => 240,
-                Breakfast => 48,
-                Daytrip | Arrival | Departure => 120,
-                Lunch | Dinner => 96,
-            },
-        }) * 10
+        let res = (|| {
+            Ok((match (c, d) {
+                (Germany, Some(Destination::IndiaOther)) => match self {
+                    FullDay => 320,
+                    Daytrip | Arrival | Departure => 210,
+                    anything_else => return Err(anything_else),
+                },
+                (Germany, None) => match self {
+                    FullDay => 240,
+                    Daytrip | Arrival | Departure => 120,
+                    Breakfast => 48,
+                    Lunch | Dinner => 96,
+                },
+            }) * 10)
+        })();
+        match res {
+            Ok(val) => val,
+            // It's not good for a lib to panic, but I find it too cumbersome to pass-through the error through all callers right now.
+            // Maybe eventually we will learn how to produce a valid value in all cases.
+            Err(invalid_kind) => panic!(
+                "The per-diem of kind '{}' cannot yield an amount - please try another one.",
+                invalid_kind
+            ),
+        }
     }
 }
 
@@ -99,12 +115,17 @@ fn to_date_string(d: &Date<Utc>) -> String {
 
 fn to_merchant(num_days: u32, ctx: &Context, kind: &Kind, mode: &Mode) -> String {
     format!(
-        "{} * {} {} @ {}{:.2}",
+        "{} * {}{} {} @ {}{:.2}",
         num_days,
+        match ctx.user.destination {
+            Some(ref destination) => format!("{} for ", destination),
+            None => "".to_owned(),
+        },
         ctx.user.country,
         kind,
         ctx.user.country.currency().symbol(),
-        ((kind.amount(&ctx.user.country) / 10) as i32 * mode) as f32 / 10.0
+        ((kind.amount(&ctx.user.country, ctx.user.destination.as_ref()) / 10) as i32 * mode) as f32
+            / 10.0
     )
 }
 
@@ -143,7 +164,8 @@ fn to_element(
         created,
         currency: format!("{}", ctx.user.country.currency()),
         merchant: to_merchant(num_days, ctx, &kind, mode),
-        amount: (kind.amount(&ctx.user.country) * num_days) as i32 * mode,
+        amount: (kind.amount(&ctx.user.country, ctx.user.destination.as_ref()) * num_days) as i32
+            * mode,
         category: ctx.user.categories.per_diems.name.clone(),
         tag: format!("{}:{}", ctx.user.project.clone(), ctx.user.tags.travel.name),
         billable: ctx.user.tags.travel.billable,

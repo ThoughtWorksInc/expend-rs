@@ -32,6 +32,34 @@ impl std::str::FromStr for Country {
     }
 }
 
+#[derive(Serialize, Deserialize)]
+pub enum Destination {
+    IndiaOther,
+}
+
+impl std::fmt::Display for Destination {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
+        use self::Destination::*;
+        match self {
+            IndiaOther => f.write_str("India-Other"),
+        }
+    }
+}
+
+impl std::str::FromStr for Destination {
+    type Err = Error;
+
+    fn from_str(s: &str) -> Result<Self, <Self as std::str::FromStr>::Err> {
+        match s {
+            "India-Other" | "india-other" => Ok(Destination::IndiaOther),
+            _ => bail!(
+                "Invalid destination for Germany: '{}'. Destination is not implemented.",
+                s
+            ),
+        }
+    }
+}
+
 impl std::fmt::Display for Country {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
         use self::Country::*;
@@ -75,6 +103,8 @@ pub struct UserContext {
     pub email: String,
     #[serde(default)]
     pub country: Country,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub destination: Option<Destination>,
     #[serde(default)]
     pub tags: Tags,
     #[serde(default)]
